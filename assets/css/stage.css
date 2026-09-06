@@ -32,6 +32,9 @@
   --cs-stage-dark:oklch(20% .015 150);
   --cs-overlay:linear-gradient(180deg,transparent 0%,oklch(20% .015 150/.3) 62%,oklch(14% .012 150) 100%);
   --cs-on-media:oklch(98% .005 95);  --cs-on-media-soft:oklch(98% .005 95/.9);
+  /* 액센트(--cs-pine)의 미디어 위 형태. 같은 색상각 155 를 유지하되 어두운 영상 위에서 읽히도록
+     명도만 올렸다 — 새 액센트가 아니라 --cs-pine 의 on-media 변주다(design-taste 「액센트 1개」 유지). */
+  --cs-pine-media:oklch(86% .08 155);
   --cs-title-shadow:0 2px 20px oklch(10% .01 150/.3);
   --cs-shadow-card:0 4px 24px oklch(25% .012 150/.08);
   --cs-shadow-panel:0 20px 25px -5px oklch(25% .012 150/.1),0 8px 10px -6px oklch(25% .012 150/.1);
@@ -371,7 +374,16 @@ main.stage-wrap{display:flex;flex-direction:column;gap:var(--cs-gap-stack);flex:
 .stage__poster,
 .stage__vid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 50%}
 .stage__poster:not([src]),
-.stage__poster[src=""]{visibility:hidden}
+.stage__poster[src=""],
+/* 대기 슬롯은 투명 1px data URI 로 시작한다(정적 검사기가 src 없는 img 를 깨진 이미지로 잡는다).
+   실제 포스터가 들어오기 전까지는 종전과 똑같이 숨긴 상태여야 한다 */
+.stage__poster[src^="data:"]{visibility:hidden}
+
+/* 한옥 컷은 등불이 가로 72% 지점에 있다. 세로로 긴 화면에서 가운데를 잡으면 등불이 잘려
+   장면의 초점이 사라진다(390 실측: 하늘과 담장만 남는다). 좁은 화면에서는 크롭 기준을 등불로 옮기고,
+   카드가 16:9 에 가까워지는 ≥1200 에서 가운데로 되돌린다. */
+.stage:has(.scene.is-active[data-scene-id="root"]) .stage__poster,
+.stage:has(.scene.is-active[data-scene-id="root"]) .stage__vid{object-position:72% 50%}
 /* 슬롯 안 포스터 → 첫 프레임 페이드인. 커밋(슬롯 간 크로스페이드)이 포스터 상태에서 끝나도
    영상은 첫 프레임이 실제로 그려질 때(playing) 포스터 위로 400ms 겹쳐 들어온다 — 하드 팝 제거.
    stage.js 가 playing/emptied 에서 .is-playing 을 붙였다 뗀다 (FINDINGS perf-mobile-15) */
@@ -431,6 +443,14 @@ main.stage-wrap{display:flex;flex-direction:column;gap:var(--cs-gap-stack);flex:
   position:relative;opacity:1;transform:none;visibility:visible;
   transition:opacity var(--cs-t-text-in) var(--cs-ease-out) var(--cs-t-text-out),
              transform var(--cs-t-text-in) var(--cs-ease-out) var(--cs-t-text-out);
+}
+/* eyebrow = 「지금 어느 사업 이야기인지」 이름표(2026-09-06 홍회장 지시).
+   섹션마다 붙는 장식 eyebrow(anti-slop)와 다르다 — 무대는 장면이 갈아끼워지는 자리라
+   이름표가 없으면 방문자가 무엇을 보고 있는지 알 방법이 없다. 그래서 점·괘선 같은 장식을 붙이지 않고
+   글자만 액센트색으로 둔다. 그림자는 H1 과 공유해 같은 스크림 위에서 같은 강도로 뜬다. */
+.scene__eyebrow{
+  margin:0 0 6px;font:700 var(--cs-text-sm)/1.4 var(--cs-font);letter-spacing:.06em;
+  color:var(--cs-pine-media);text-shadow:var(--cs-title-shadow);
 }
 .scene__h1{
   font:800 var(--cs-h1)/var(--cs-h1-lh) var(--cs-font);letter-spacing:var(--cs-h1-track);
@@ -1001,6 +1021,8 @@ main.not-found{flex:1;padding:3rem 24px;text-align:center;animation:page-in .4s 
   }
   .scene__ctas{flex-direction:row;align-items:center}
   .scene__ctas .btn{width:auto}
+  /* H1 이 1.625rem 이상으로 커지는 구간이라 이름표도 한 단 올린다(390 에서는 22px H1 옆 14px 가 맞다) */
+  .scene__eyebrow{font-size:var(--cs-text-md);margin-bottom:8px}
   /* ≥768 은 영상 자동 경로다(stage.js mobileNoVideo = hover:none · <768). 옵트인 버튼은 필요 없다 */
   .pager__video{display:none}
   /* 옵트인 버튼이 없으므로 기본 티어의 트랙 상한 축소(hover:none 100px)를 되돌린다 */
@@ -1034,6 +1056,9 @@ main.not-found{flex:1;padding:3rem 24px;text-align:center;animation:page-in .4s 
 
 /* D ≥1200: 홈 잠금, body 20/80/0, 카드 flex:1, 트랙 80/80/40 max 600, 페이저 우하 50/40 총폭 372 */
 @media (min-width:1200px){
+  /* 카드가 16:9 에 가까워져 좌우가 거의 안 잘린다 — 한옥 컷 크롭 기준을 계약값(가운데)으로 되돌린다 */
+  .stage:has(.scene.is-active[data-scene-id="root"]) .stage__poster,
+  .stage:has(.scene.is-active[data-scene-id="root"]) .stage__vid{object-position:50% 50%}
   :root{
     --cs-page-x:80px;
     --cs-page-top:20px;
