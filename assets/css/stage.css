@@ -406,9 +406,10 @@ main.stage-wrap{display:flex;flex-direction:column;gap:var(--cs-gap-stack);flex:
 /* 영상 옵트인 버튼(.pager__video)은 hover:none 에서만 보이고 카드 좌상단 44×44 를 먹는다.
    글자 200% 확대에서 트랙이 최대로 자라면 H1 첫 줄이 그 버튼 아래로 들어간다(a11y-live-2 실측 36×44 겹침).
    힌트와 같은 방식으로 트랙 상한을 버튼 밴드 아래로 내린다. ≥768 은 버튼이 없으므로 §15 에서 되돌린다 */
+/* 버튼 밴드 = 카드 상단 8 + 44 + 여유 8 = 60, 트랙 하단 여백 72 → 100% − 132 (390 실측: 트랙 top 157 > 버튼 bottom 149) */
 @media (hover:none){
-  .stage__track{max-height:calc(100% - 100px)}
-  .stage:has(.pager__hint:not([hidden])) .stage__track{max-height:calc(100% - 128px)}
+  .stage__track,
+  .stage:has(.pager__hint:not([hidden])) .stage__track{max-height:calc(100% - 132px)}
 }
 .scene{
   /* 🔴 진입 초기값을 아래(+8)에서 위(-8)로 뒤집었다. absolute 자식이라도 아래로 민 8px 는
@@ -583,7 +584,8 @@ main.stage-wrap{display:flex;flex-direction:column;gap:var(--cs-gap-stack);flex:
 
 .site-footer__sitemap{position:relative}
 .site-footer__sitemap > summary{
-  display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 4px;
+  /* 인셋 2 = 같은 푸터의 링크·헤더 워드마크와 같은 좌측 기준선(FINDINGS fresh-15) */
+  display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 2px;
   list-style:none;cursor:pointer;color:var(--cs-pine);font-weight:600;
 }
 .site-footer__sitemap > summary::-webkit-details-marker{display:none}
@@ -1033,7 +1035,9 @@ main.not-found{flex:1;padding:3rem 24px;text-align:center;animation:page-in .4s 
     --cs-card-h:auto;
     --cs-track-left:80px;  --cs-track-right:80px;
     --cs-track-bottom:40px;
-    --cs-track-max:600px;
+    /* 🔴 1200~1439 는 카드폭(뷰포트-160)이 좁아 트랙 600 + 페이저 행 422 가 가로로 물린다(09-06 실측).
+       1440 이상에서 600 을 되돌린다(아래 1440 티어). */
+    --cs-track-max:512px;
     --cs-cta-h:52px;  --cs-cta-font:16px;  --cs-cta-pad:14px 28px;  --cs-cta-gap:16px;
     --cs-pager-right:50px;  --cs-pager-bottom:40px;
     --cs-seg-hit-w:40px;  --cs-hit:44px;
@@ -1046,6 +1050,13 @@ main.not-found{flex:1;padding:3rem 24px;text-align:center;animation:page-in .4s 
     /* 16:9 에 가까운 데스크톱 카드에서는 텍스트 트랙이 하단 밴드에만 놓인다 — 계약 스크림(35~75%) 복원.
        실측 1440 장면2 H1 밴드 루마 95(6.4:1)로 이 값에서 이미 통과한다 */
     --cs-scrim-top:35%;  --cs-scrim-full:75%;
+  }
+
+  /* 🔴 짧은 데스크톱(≤700h)은 카드가 낮아 텍스트 밴드가 스크림 시작선 위로 올라간다
+     (실측 1280×620 장면2 H1 3.78:1). 밴드를 위로 넓혀 4.5:1 을 회복한다. */
+  @media (max-height:700px){
+    .stage__overlay{ --cs-scrim-top:8%; --cs-scrim-full:52%; }
+    .stage:has(.scene.is-active[data-scene-id="welldying"]) .stage__overlay{ --cs-scrim-a:.66 }
   }
 
   /* 잠금은 폭만이 아니라 높이도 본다. 짧은 뷰포트·텍스트 확대에서 잘린 카피에 닿지 못하는 것을 막는다
@@ -1155,6 +1166,8 @@ main.not-found{flex:1;padding:3rem 24px;text-align:center;animation:page-in .4s 
 
 /* XL ≥1440: 카드·헤더·푸터 1280 상한 중앙. 서브 inner 1200 유지 */
 @media (min-width:1440px){
+  /* 카드가 1280 로 고정되는 구간에서는 트랙 600 + 페이저 422 가 함께 들어간다(계약값 복원) */
+  :root{ --cs-track-max:600px; }
   .site-header,
   main.stage-wrap,
   .site-footer{width:100%;max-width:1280px;margin-left:auto;margin-right:auto}
@@ -1197,3 +1210,16 @@ main.not-found{flex:1;padding:3rem 24px;text-align:center;animation:page-in .4s 
   .btn:hover{transform:none}
   .media-card:hover{transform:none}
 }
+
+/* /network 협력 네트워크 목록 (09-06 실데이터 적용) */
+.net-group{margin-top:2.5rem}
+.net-group__title{font-size:var(--cs-text-lg);font-weight:700;color:var(--cs-ink);padding-bottom:.5rem;border-bottom:1px solid var(--cs-hairline)}
+.net-list{list-style:none;display:grid;grid-template-columns:1fr;gap:0}
+.net-list__item{border-bottom:1px solid var(--cs-hairline)}
+.net-list__link{display:flex;align-items:center;min-height:56px;padding:0 4px;color:var(--cs-ink);text-decoration:none;font-size:var(--cs-text-md)}
+.net-list__link::after{content:"↗";margin-left:auto;color:var(--cs-ink-soft);font-size:var(--cs-text-sm)}
+@media (hover:hover){.net-list__link:hover{color:var(--cs-pine)}}
+.net-list__link:active{color:var(--cs-pine-deep)}
+.net-note{margin-top:2rem;font-size:var(--cs-text-sm);color:var(--cs-ink-soft)}
+.hero-doc__note{margin-top:1rem;color:var(--cs-ink-soft)}
+@media (min-width:768px){ .net-list{grid-template-columns:1fr 1fr;column-gap:2rem} }

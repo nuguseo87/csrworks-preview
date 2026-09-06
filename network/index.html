@@ -23,14 +23,15 @@
 <link rel="icon" type="image/svg+xml" href="../assets/img/favicon.svg">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<link rel="stylesheet" href="../assets/css/stage.css?v=69c44571">
+<link rel="stylesheet" href="../assets/css/stage.css?v=4780447b">
 </head>
 
 <body class="is-sub">
 <a class="skip-link" href="#main">본문으로 건너뛰기</a>
 <header class="site-header">
   <div class="site-header__bar">
-    <a class="site-header__logo" href="../index.html" aria-label="사회공헌사업단 홈"><span class="site-header__wordmark">사회공헌사업단</span></a>
+
+    <a class="site-header__logo" href="../index.html" aria-label="사회공헌사업단 홈"><span class="site-header__wordmark">사회공헌사업단</span><span class="site-header__descriptor">경주 최부자 300년 가훈을 잇는 CSR 협력단</span></a>
     <nav class="site-nav" aria-label="주 메뉴">
       <ul class="site-nav__list">
         
@@ -177,7 +178,7 @@
 </header>
 
 <div class="scroll-progress" aria-hidden="true"></div>
-<main id="main" class="page-main">
+<main id="main" class="page-main" tabindex="-1">
   <div class="page-main__inner">
 
 
@@ -185,16 +186,69 @@
 
     <header class="hero-doc">
       <h1 class="hero-doc__title">협력 네트워크</h1>
-      <p class="hero-doc__lead">사회공헌사업단, 시에스알웍스(주), 제주자랑(주)은 역할이 달라 이름이 나뉘었을 뿐 한 뿌리에서 운영합니다. 카페 아모르파티는 이 정신이 일상과 만나는 자리입니다. 기업과 단체는 제휴사로, 전문가는 파트너로 함께 앉으실 수 있습니다.</p>
+      <p class="hero-doc__lead">사회공헌사업단, <span class="nb">시에스알웍스(주)</span>, <span class="nb">제주자랑(주)은</span> 역할이 달라 이름이 나뉘었을 뿐 한 뿌리에서 운영합니다. 카페 아모르파티는 이 정신이 일상과 만나는 자리입니다. 기업과 단체는 제휴사로, 전문가는 파트너로 함께 앉으실 수 있습니다.</p>
     </header>
 
-    <nav class="tabs tabs--filter" aria-label="협력 네트워크">
-      {{NETWORK_CATEGORIES_FROM_CLIENT}}
-    </nav>
 
-    <ul class="media-grid">
-      <li class="media-card media-card--pending">{{NETWORK_LINKS_FROM_CLIENT}}</li>
-    </ul>
+    <p class="hero-doc__note">사업단 사이트에 연결되어 있는 기관과 기업입니다. 2026년 9월 6일 기준으로 접속이 확인된 곳만 싣습니다.</p>
+
+
+    <section class="net-group">
+      <h2 class="net-group__title">공공·연구</h2>
+      <ul class="net-list">
+
+        <li class="net-list__item"><a class="net-list__link" href="http://www.kamco.or.kr/home/index.jsp" target="_blank" rel="noopener noreferrer">한국자산관리공사(캠코)</a></li>
+
+        <li class="net-list__item"><a class="net-list__link" href="http://www.jjerc.or.kr/" target="_blank" rel="noopener noreferrer">제주환경연구센터</a></li>
+
+        <li class="net-list__item"><a class="net-list__link" href="http://area.or.kr/" target="_blank" rel="noopener noreferrer">미술등록협회</a></li>
+
+      </ul>
+    </section>
+
+    <section class="net-group">
+      <h2 class="net-group__title">전문 서비스</h2>
+      <ul class="net-list">
+
+        <li class="net-list__item"><a class="net-list__link" href="http://www.pwc.com/kr/ko" target="_blank" rel="noopener noreferrer">삼일회계법인</a></li>
+
+        <li class="net-list__item"><a class="net-list__link" href="http://www.googolhd.com/" target="_blank" rel="noopener noreferrer">구골홀딩스</a></li>
+
+        <li class="net-list__item"><a class="net-list__link" href="http://www.roven.co.kr/" target="_blank" rel="noopener noreferrer">(주)로벤</a></li>
+
+        <li class="net-list__item"><a class="net-list__link" href="http://www.inclean.net/" target="_blank" rel="noopener noreferrer">뉴젠</a></li>
+
+      </ul>
+    </section>
+
+    <section class="net-group">
+      <h2 class="net-group__title">언론·미디어</h2>
+      <ul class="net-list">
+
+        <li class="net-list__item"><a class="net-list__link" href="http://www.seoul.co.kr/" target="_blank" rel="noopener noreferrer">서울신문</a></li>
+
+        <li class="net-list__item"><a class="net-list__link" href="http://www.greenpostkorea.co.kr/" target="_blank" rel="noopener noreferrer">환경TV</a></li>
+
+        <li class="net-list__item"><a class="net-list__link" href="http://www.jejuinnews.co.kr/" target="_blank" rel="noopener noreferrer">제주인뉴스</a></li>
+
+        <li class="net-list__item"><a class="net-list__link" href="http://blog.naver.com/jplusmedia/" target="_blank" rel="noopener noreferrer">제이플러스미디어</a></li>
+
+      </ul>
+    </section>
+
+    <section class="net-group">
+      <h2 class="net-group__title">기업·기타</h2>
+      <ul class="net-list">
+
+        <li class="net-list__item"><a class="net-list__link" href="http://www.harachair.co.kr/landing/index.php" target="_blank" rel="noopener noreferrer">하라체어</a></li>
+
+        <li class="net-list__item"><a class="net-list__link" href="http://messageqna.com/" target="_blank" rel="noopener noreferrer">메시지큐엔에이</a></li>
+
+      </ul>
+    </section>
+
+
+    <p class="net-note">기관 로고와 협력 범위 표기는 각 기관의 게재 동의를 받아 순차로 반영합니다.</p>
 
 
   </div>
@@ -221,10 +275,11 @@
   <div class="site-footer__family">
     <span class="site-footer__family-label">사회공헌사업단 패밀리</span>
     <ul>
+
       <li><a href="../index.html">사회공헌사업단</a></li>
       <li><a href="../family/csrworks/index.html">시에스알웍스(주)</a></li>
       <li><a href="../family/jeju/index.html">제주자랑(주)</a></li>
-      <li><a href="https://www.amorfaticafe.net" target="_blank" rel="noopener">카페 아모르파티</a></li>
+      <li><a href="https://www.amorfaticafe.net" target="_blank" rel="noopener">카페 아모르파티<span class="visually-hidden"> 새 창 열림</span></a></li>
       
     </ul>
   </div>
@@ -232,10 +287,11 @@
     <a href="../privacy/index.html">개인정보처리방침</a>
     <span class="site-footer__copy">© 2026 사회공헌사업단 · 시에스알웍스 주식회사</span>
     <span class="site-footer__org">단장 오승현</span>
-    <address class="site-footer__address"><span class="site-footer__addr">{{ADDRESS_FROM_CLIENT}}</span> <span class="site-footer__phone">{{PHONE_FROM_CLIENT}}</span> <span class="site-footer__email">{{EMAIL_FROM_CLIENT}}</span></address>
+
+    <address class="site-footer__address"><span class="site-footer__addr">서울특별시 용산구 이태원로 5-1, 201호 (한강로1가, 삼화빌딩)</span> <span class="site-footer__phone">02-885-2942</span> </address>
   </div>
 </footer>
-<script src="../assets/js/stage.js?v=95104fa5" defer></script>
+<script src="../assets/js/stage.js?v=b95c5496" defer></script>
 
 </body>
 </html>

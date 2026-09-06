@@ -1,8 +1,8 @@
 {
-  "time": "2026-09-06T06:41:00.283Z",
-  "hash": "9d9da712",
-  "cssHash": "69c44571",
-  "jsHash": "95104fa5",
+  "time": "2026-09-06T07:10:05.163Z",
+  "hash": "d266d3dc",
+  "cssHash": "4780447b",
+  "jsHash": "b95c5496",
   "siteUrl": "https://nuguseo87.github.io/csrworks-preview",
   "relative": true,
   "strict": true,
@@ -30,32 +30,14 @@
   ],
   "skipped": [],
   "placeholders": {
-    "count": 89,
+    "count": 42,
     "byFile": {
-      "index.html": [
-        "ADDRESS_FROM_CLIENT",
-        "PHONE_FROM_CLIENT",
-        "EMAIL_FROM_CLIENT"
-      ],
       "about/index.html": [
-        "TIMELINE_FROM_CLIENT",
-        "ADDRESS_FROM_CLIENT",
-        "PHONE_FROM_CLIENT",
-        "EMAIL_FROM_CLIENT"
+        "TIMELINE_FROM_CLIENT"
       ],
       "about/people/index.html": [
         "EXECUTIVES_FROM_CLIENT",
-        "DIRECTOR_GREETING_FROM_CLIENT",
-        "ADDRESS_FROM_CLIENT",
-        "PHONE_FROM_CLIENT",
-        "EMAIL_FROM_CLIENT"
-      ],
-      "network/index.html": [
-        "NETWORK_CATEGORIES_FROM_CLIENT",
-        "NETWORK_LINKS_FROM_CLIENT",
-        "ADDRESS_FROM_CLIENT",
-        "PHONE_FROM_CLIENT",
-        "EMAIL_FROM_CLIENT"
+        "DIRECTOR_GREETING_FROM_CLIENT"
       ],
       "works/senior/index.html": [
         "WORKS_SENIOR_FEATURED_BODY",
@@ -64,10 +46,7 @@
         "WORKS_SENIOR_ROW2_TITLE",
         "WORKS_SENIOR_ROW2_BODY",
         "WORKS_SENIOR_ROW3_TITLE",
-        "WORKS_SENIOR_ROW3_BODY",
-        "ADDRESS_FROM_CLIENT",
-        "PHONE_FROM_CLIENT",
-        "EMAIL_FROM_CLIENT"
+        "WORKS_SENIOR_ROW3_BODY"
       ],
       "works/welldying/index.html": [
         "WORKS_WELLDYING_FEATURED_BODY",
@@ -76,10 +55,7 @@
         "WORKS_WELLDYING_ROW2_TITLE",
         "WORKS_WELLDYING_ROW2_BODY",
         "WORKS_WELLDYING_ROW3_TITLE",
-        "WORKS_WELLDYING_ROW3_BODY",
-        "ADDRESS_FROM_CLIENT",
-        "PHONE_FROM_CLIENT",
-        "EMAIL_FROM_CLIENT"
+        "WORKS_WELLDYING_ROW3_BODY"
       ],
       "works/carbon/index.html": [
         "WORKS_CARBON_FEATURED_BODY",
@@ -88,10 +64,7 @@
         "WORKS_CARBON_ROW2_TITLE",
         "WORKS_CARBON_ROW2_BODY",
         "WORKS_CARBON_ROW3_TITLE",
-        "WORKS_CARBON_ROW3_BODY",
-        "ADDRESS_FROM_CLIENT",
-        "PHONE_FROM_CLIENT",
-        "EMAIL_FROM_CLIENT"
+        "WORKS_CARBON_ROW3_BODY"
       ],
       "works/donation/index.html": [
         "WORKS_DONATION_FEATURED_BODY",
@@ -100,63 +73,37 @@
         "WORKS_DONATION_ROW2_TITLE",
         "WORKS_DONATION_ROW2_BODY",
         "WORKS_DONATION_ROW3_TITLE",
-        "WORKS_DONATION_ROW3_BODY",
-        "ADDRESS_FROM_CLIENT",
-        "PHONE_FROM_CLIENT",
-        "EMAIL_FROM_CLIENT"
+        "WORKS_DONATION_ROW3_BODY"
       ],
       "family/csrworks/index.html": [
         "CSRWORKS_FEATURED_BODY",
         "CSRWORKS_ROW1_TITLE",
         "CSRWORKS_ROW1_BODY",
         "CSRWORKS_ROW2_TITLE",
-        "CSRWORKS_ROW2_BODY",
-        "ADDRESS_FROM_CLIENT",
-        "PHONE_FROM_CLIENT",
-        "EMAIL_FROM_CLIENT"
+        "CSRWORKS_ROW2_BODY"
       ],
       "family/jeju/index.html": [
-        "JEJU_BODY_FROM_BACKUP",
-        "ADDRESS_FROM_CLIENT",
-        "PHONE_FROM_CLIENT",
-        "EMAIL_FROM_CLIENT"
+        "JEJU_BODY_FROM_BACKUP"
       ],
       "family/amorfati/index.html": [
         "AMORFATI_OPEN_DATE",
-        "AMORFATI_ADDRESS",
-        "ADDRESS_FROM_CLIENT",
-        "PHONE_FROM_CLIENT",
-        "EMAIL_FROM_CLIENT"
+        "AMORFATI_ADDRESS"
       ],
       "join/affiliate/index.html": [
-        "FAQ_FROM_CLIENT",
-        "ADDRESS_FROM_CLIENT",
-        "PHONE_FROM_CLIENT",
-        "EMAIL_FROM_CLIENT"
+        "FAQ_FROM_CLIENT"
       ],
       "join/partner/index.html": [
-        "FAQ_FROM_CLIENT",
-        "ADDRESS_FROM_CLIENT",
-        "PHONE_FROM_CLIENT",
-        "EMAIL_FROM_CLIENT"
+        "FAQ_FROM_CLIENT"
       ],
       "privacy/index.html": [
-        "PRIVACY_OFFICER_FROM_CLIENT",
-        "ADDRESS_FROM_CLIENT",
-        "PHONE_FROM_CLIENT",
-        "EMAIL_FROM_CLIENT"
-      ],
-      "404.html": [
-        "ADDRESS_FROM_CLIENT",
-        "PHONE_FROM_CLIENT",
-        "EMAIL_FROM_CLIENT"
+        "PRIVACY_OFFICER_FROM_CLIENT"
       ]
     }
   },
   "descriptions": {
     "/": {
       "length": 94,
-      "text": "경주 최부자 가문은 '일백 리 안에 굶어죽는 사람이 없게 하라'는 가훈을 300년 동안 지켰습니다. 사회공헌사업단은 이 약속을 오늘의 사업으로 잇는 CSR 협력단입니다."
+      "text": "경주 최부자 가문은 ‘일백 리 안에 굶어죽는 사람이 없게 하라’는 가훈을 300년 동안 지켰습니다. 사회공헌사업단은 이 약속을 오늘의 사업으로 잇는 CSR 협력단입니다."
     },
     "/about": {
       "length": 85,

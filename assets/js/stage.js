@@ -253,10 +253,14 @@
         next.video.removeEventListener('canplay', finish);
         commitSlot(next, prev, i, true);
       };
-      /* 첫 프레임(loadeddata) 기준 커밋 + 타임아웃 1200ms — 콜드 네트워크에서 포스터 상태로 커밋되는 하드 팝을 줄인다 */
+      /* 첫 프레임(loadeddata) 기준 커밋 + 타임아웃 — 콜드 네트워크에서 포스터 상태로 커밋되는 하드 팝을 줄인다.
+         🔴 상한 1200ms 는 텍스트(200 out + 400 in = 600ms)보다 최대 0.6초 늦게 400ms 크로스페이드를 시작해
+         「글은 이미 새 장면, 그림은 두 장면이 반투명으로 겹침」 상태를 만들었다(캡처 4/4 재현 · FINDINGS fresh-4).
+         상한을 텍스트 완료 시점(600ms)으로 내려 두 전환이 같은 창 안에서 끝나게 한다. */
+      if (next.video.readyState >= 2) finish();
       next.video.addEventListener('loadeddata', finish);
       next.video.addEventListener('canplay', finish);
-      setTimeout(finish, 1200);
+      setTimeout(finish, 600);
     }
     /* BUILD_PLAN §8: 다음 장면(dir 방향)은 즉시 preload='metadata' 로 잡아 두고, 재생 2s 전에 'auto' 로 올린다.
        load() 는 슬롯당 1회(소스가 바뀔 때)만 — 중복 로드 금지 */
@@ -311,6 +315,21 @@
       if (!t) return;
       try { t.focus({ preventScroll: true }); } catch (e) { t.focus(); }
     }
+    /* 무대 밖(드롭다운 카드·모바일 메뉴)에서 장면을 점프한 경우의 포커스 착지점.
+       keepFocusInStage 는 「무대 안에서 사라지는 요소를 들고 있던 포커스」만 구제하므로(ae 가 무대 밖이면 즉시 return)
+       점프 경로는 따로 처리해야 한다. 트리거가 display:none 으로 닫히면 포커스가 <body> 로 떨어져
+       키보드 사용자는 매번 문서 맨 위부터 다시 Tab 해야 했다 — a11y-live-1.
+       착지점은 그 장면의 논리적 시작점 = 장면 제목(h2.scene__h1). 제목은 원래 포커스 대상이 아니라
+       프로그램 포커스용 tabindex="-1" 을 이 순간에 붙인다(SSR 마크업·DOM 계약은 그대로 두고, Tab 순서에도 안 들어간다).
+       제목이 없으면 활성 세그먼트(role=tab, 「n번째 장면, 이름」)로 떨어진다. */
+    function focusSceneStart() {
+      var h = qs('.scene.is-active .scene__h1', stageEl);
+      if (h && !h.hasAttribute('tabindex')) h.setAttribute('tabindex', '-1');
+      var t = h || segs[index] || qs('.scene.is-active .btn', stageEl);
+      if (!t) return false;
+      try { t.focus({ preventScroll: true }); } catch (e) { t.focus(); }
+      return document.activeElement === t;
+    }
     function goTo(i, src, instant, initial) {
       src = src || 'user';
       i = norm(i);
@@ -319,10 +338,11 @@
       var wasFocused = document.activeElement;
       index = i;
       stageEl.dataset.index = String(i);
+      /* 그림 요청을 먼저 띄우고 텍스트를 바꾼다 — 두 전환의 시작점을 붙여 「글만 먼저 바뀐」 구간을 줄인다(fresh-4) */
+      swapVideo(i);
       swapText(from, i, !!instant);
       updatePager(i);
       keepFocusInStage(wasFocused);
-      swapVideo(i);
       restartSweep(i);
       /* 포커스가 이미 해당 탭에 있으면 SR 이 탭 선택을 읽으므로 라이브 공지는 생략(이중 공지 방지).
          초기 위치 맞춤(initial)은 로드 중이므로 침묵 — §7-2 */
@@ -337,15 +357,27 @@
     /* ── 정지 사유 집합 (§5-3 pause/resume) */
     /* 토글 버튼은 라벨 고정 + aria-pressed 변화 (ARIA APG). 라벨과 pressed 를 함께 뒤집으면
        「자동 전환 재생, 눌림」처럼 상태가 거꾸로 읽힌다 — a11y-12. 아이콘 교체는 유지. */
+    /* 🔴 사용자 외 사유(reduced-motion)로 무대가 멈춰 있으면 버튼은 그 사실을 말해야 한다.
+       옛 코드는 'user' 만 봐서 RM 초기화 경로에서 「지금 돌고 있으니 누르면 멈춘다」(aria-pressed=false +
+       정지 글리프)로 말했고, 실제로 눌러도 resume() 이 reasons 에 남은 'rm' 때문에 조기 반환해 아무 일도
+       일어나지 않았다 — WCAG 4.1.2 상태 불일치(a11y-live-5). RM 은 사용자가 OS 에서 정한 값이라
+       이 버튼으로 풀 수 없으므로 aria-disabled 로 두고 이유를 라벨로 말한다. */
+    function motionLocked() { return reasons.has('rm'); }
     function syncPauseBtn() {
       if (!pauseBtn) return;
       var userPaused = reasons.has('user');
+      var locked = motionLocked();
       pauseBtn.setAttribute('aria-pressed', userPaused ? 'true' : 'false');
-      var label = cfg.controls.pause || pauseBtn.dataset.labelPause;
+      var label = locked
+        ? (cfg.controls.pauseLockedRm || pauseBtn.dataset.labelLockedRm || cfg.controls.pause || pauseBtn.dataset.labelPause)
+        : (cfg.controls.pause || pauseBtn.dataset.labelPause);
       if (label && pauseBtn.getAttribute('aria-label') !== label) pauseBtn.setAttribute('aria-label', label);
+      if (locked) pauseBtn.setAttribute('aria-disabled', 'true'); else pauseBtn.removeAttribute('aria-disabled');
+      /* 글리프는 「지금 멈춰 있나」를 그린다 — 사유가 무엇이든 멈춰 있으면 재생 글리프 */
+      var stopped = userPaused || locked;
       var ic = qs('.pager__icon--pause', pauseBtn), ip = qs('.pager__icon--play', pauseBtn);
-      if (ic) ic.hidden = userPaused;
-      if (ip) ip.hidden = !userPaused;
+      if (ic) ic.hidden = stopped;
+      if (ip) ip.hidden = !stopped;
     }
     /* 영상 정지 사유는 사유 집합에서 매번 다시 계산한다. 사유 하나가 풀렸을 때 「스윕은 아직 정지,
        영상은 재생」 같은 조합이 정확히 복원돼야 한다 — 사유별 분기를 pause/resume 양쪽에 흩어 두면
@@ -386,13 +418,34 @@
       syncVideoPlayState();
       emit(stageEl, 'cs:resume', { reasons: [] });
     }
-    function toggleUser() { if (reasons.has('user')) resume('user'); else pause('user'); }
+    /* speak = 상태 변화를 라이브 영역으로 알린다. aria-pressed 변화는 그 버튼에 포커스가 있을 때만 읽히는데,
+       Space 는 무대 어디서나(장면 CTA 링크 포함) 토글을 가로채므로 그 경로에는 공지가 필요하다(a11y-live-6) */
+    function toggleUser(speak) {
+      if (motionLocked()) return;   /* RM 잠금 중에는 토글이 아무 일도 하지 않는다 — 조용히 무시하지 말고 아예 받지 않는다 */
+      if (reasons.has('user')) resume('user'); else pause('user');
+      if (speak && liveEl) {
+        var msg = reasons.has('user') ? (cfg.controls.pause || '') : (cfg.controls.play || '');
+        if (msg) { liveEl.textContent = ''; requestAnimationFrame(function () { liveEl.textContent = msg; }); }
+      }
+    }
 
     /* ── 사용자 입력 (§5-4) */
+    /* 모바일 목차는 카드 아래 접힘 밖이라 4~6번 장면에서는 활성 표시가 늘 화면 밖이다 — 장면을 바꿔도
+       목차가 아무 반응을 보이지 않는 것처럼 보인다(FINDINGS mobile-11). 무대 안에서 장면을 넘긴 경우에만
+       활성 행을 끌어온다(내비·메뉴 점프는 initSceneJumps 가 맨 위로 올리므로 건드리지 않는다). */
+    function revealListItem() {
+      var b = null;
+      for (var k = 0; k < listItems.length; k++) if (+listItems[k].dataset.sceneIndex === index) { b = listItems[k]; break; }
+      if (!b || !b.offsetParent) return;
+      var r = b.getBoundingClientRect();
+      if (r.top >= 0 && r.bottom <= (window.innerHeight || document.documentElement.clientHeight)) return;
+      try { b.scrollIntoView({ block: 'nearest', behavior: reducedMotion() ? 'auto' : 'smooth' }); }
+      catch (e) { b.scrollIntoView(false); }
+    }
     function userInput(fn) { return function (e) { hideHint(); fn(e); }; }
-    segs.forEach(function (s) { cleanups.push(on(s, 'click', userInput(function () { goTo(+s.dataset.sceneIndex, 'user'); }))); cleanups.push(on(s, 'animationend', onAnimationEnd)); });
-    if (prevBtn) cleanups.push(on(prevBtn, 'click', userInput(function () { prev('user'); })));
-    if (nextBtn) cleanups.push(on(nextBtn, 'click', userInput(function () { next('user'); })));
+    segs.forEach(function (s) { cleanups.push(on(s, 'click', userInput(function () { goTo(+s.dataset.sceneIndex, 'user'); revealListItem(); }))); cleanups.push(on(s, 'animationend', onAnimationEnd)); });
+    if (prevBtn) cleanups.push(on(prevBtn, 'click', userInput(function () { prev('user'); revealListItem(); })));
+    if (nextBtn) cleanups.push(on(nextBtn, 'click', userInput(function () { next('user'); revealListItem(); })));
     if (pauseBtn) cleanups.push(on(pauseBtn, 'click', userInput(function () { toggleUser(); })));
 
     cleanups.push(on(document, 'keydown', function (e) {
@@ -417,7 +470,7 @@
       if (key === ' ' || key === 'Spacebar') {
         if (!inStage) return;
         if (ae && ae.closest && ae.closest('.pager button')) return; /* 버튼 자체 활성화 우선 */
-        e.preventDefault(); hideHint(); toggleUser();
+        e.preventDefault(); hideHint(); toggleUser(true);
       }
     }));
 
@@ -427,10 +480,17 @@
       if (!wheelOn || !window.matchMedia('(min-width:' + cfg.wheel.minWidth + 'px)').matches) return;
       var dy = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaMode === 2 ? e.deltaY * window.innerHeight : e.deltaY;
       if (Math.abs(dy) < Math.abs(e.deltaX)) return; /* 가로 스크롤은 무시 */
+      if (document.body.classList.contains('menu-open')) return;
       if (wheelLocked) { wheelAcc = 0; e.preventDefault(); return; }
-      var unlocked = getComputedStyle(document.body).overflowY !== 'hidden';
-      if (unlocked && index === N - 1 && dy > 0) return;
-      if (unlocked && index === 0 && dy < 0 && window.scrollY === 0) return;
+      /* 🔴 탈출 가드는 body 의 overflow 가 아니라 「문서에 실제로 남은 스크롤 여유」를 본다.
+         옛 판정(getComputedStyle(body).overflowY !== 'hidden')은 두 방향 모두를 한 값에 묶어,
+         ① 1280×620 처럼 잠금이 걸리지 않는 짧은 뷰포트에서 푸터가 화면 밖(y=621)인데도 마지막 장면까지
+         휠을 가로챘고 ② 1440×900 에서는 body 계산값이 'hidden' 이라 가드 자체가 죽어 있었다(a11y-live-4). */
+      var docEl = document.documentElement;
+      var canScrollDown = docEl.scrollHeight - window.scrollY - window.innerHeight > 1;
+      var canScrollUp = window.scrollY > 0;
+      if (index === N - 1 && dy > 0 && canScrollDown) return;
+      if (index === 0 && dy < 0 && canScrollUp) return;
       e.preventDefault();
       wheelAcc += dy;
       clearTimeout(wheelIdleTimer); wheelIdleTimer = setTimeout(function () { wheelAcc = 0; }, 400);
@@ -457,6 +517,7 @@
       if (Math.atan2(Math.abs(dy), Math.abs(dx)) > cfg.swipe.maxAngleDeg * Math.PI / 180) return;
       hideHint();
       if (dx < 0) next('user'); else prev('user');
+      revealListItem();
     }, { passive: true }));
     cleanups.push(on(stageEl, 'touchcancel', function () { touch = null; }, { passive: true }));
 
@@ -542,6 +603,8 @@
       index: function () { return index; },
       dir: function () { return dir; },
       goTo: function (i, src) { hideHint(); goTo(i, src || 'user'); },
+      /* 무대 밖 트리거(드롭다운 카드·모바일 메뉴·목차)에서 점프한 뒤 포커스를 장면 시작점으로 옮긴다 — a11y-live-1 */
+      focusSceneStart: focusSceneStart,
       next: function (src) { hideHint(); next(src || 'user'); },
       prev: function (src) { hideHint(); prev(src || 'user'); },
       pause: pause,
