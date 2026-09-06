@@ -1,0 +1,1199 @@
+/* ============================================================================
+   stage.css  ·  사회공헌사업단 통합 홈페이지  ·  유일한 CSS (소유: styles)
+   정본: docs/CONTRACT.md §3(DOM 계약) §4(토큰·골격) §6(브레이크포인트)
+         docs/BUILD_PLAN.md §4(색) §5(서체) §6(상태기계·페이저) §7(반응형)
+         docs/REFERENCE_SPEC.md §1·§5 (BUILD_PLAN이 침묵한 기하)
+   규칙: 390 기본 → min-width 768 / 876 / 1200 / 1440 확장 (max-width 미디어 0건)
+         애니메이션은 transform · opacity(+visibility 지연)만. 전체 속성 트랜지션 0건.
+         그라디언트는 --cs-overlay + 텍스트 밴드 스크림 1겹(같은 요소). 순검정 0건. 글래스 0건. r16 초과 0건.
+         타이포는 §1-3 --cs-text-xs/sm/md/lg/xl 5단만 쓴다(새 px 크기 추가 금지).
+   옛 「계약 편차 3건」은 2026-09-06 14:27 에 정본으로 흡수됐다(CONTRACT §4-2·§4-3·§6, BUILD_PLAN §6-2·§13,
+   등록 = docs/CONTRACT_ISSUES.md 「2차 수정 잔여분 처리」). 지금 이 파일과 계약은 같은 값을 말한다:
+         ① <1200 이전/다음은 카드 좌우 중앙(top:50%)이 아니라 하단 flex 컨트롤 행
+         ② --cs-h1 하한 <768 = 1.375rem(360폭 넘침 방지), ≥768 계약값 복원
+         ③ ≥1200 홈 푸터 높이 44 = 하한(2행 허용)
+         ④ --cs-seg-hit-w 기본값 = 폭 비례 clamp(24~36), ≥768 36 재고정 — 세그는 WCAG 2.5.8 하한 24
+         ⑤ 홈 스크롤 잠금에 (min-height:720px) 조건, 카드 높이는 svh
+   목차: 1 토큰  2 리셋  3 유틸  4 버튼  5 헤더  6 무대  7 페이저  8 목차 리스트
+         9 푸터  10 서브 셸  11 서브 컴포넌트  12 폼  13 다리  14 404
+         15 브레이크포인트  16 reduced-motion
+   ========================================================================== */
+
+
+/* 1. 토큰 ------------------------------------------------------------------ */
+
+/* 1-1. 색·서체·모션 (CONTRACT §4-1 그대로, 값 변경 금지) */
+:root{
+  --cs-paper:oklch(97.2% .008 95);   --cs-paper-deep:oklch(94.8% .012 95);
+  --cs-ink:oklch(25% .012 150);      --cs-ink-soft:oklch(43% .02 150);
+  --cs-pine:oklch(42% .09 155);      --cs-pine-deep:oklch(34% .085 155);
+  --cs-pine-tint:oklch(90% .03 155);
+  --cs-hair:oklch(87% .01 110);
+  --cs-stage-dark:oklch(20% .015 150);
+  --cs-overlay:linear-gradient(180deg,transparent 0%,oklch(20% .015 150/.3) 62%,oklch(14% .012 150) 100%);
+  --cs-on-media:oklch(98% .005 95);  --cs-on-media-soft:oklch(98% .005 95/.9);
+  --cs-title-shadow:0 2px 20px oklch(10% .01 150/.3);
+  --cs-shadow-card:0 4px 24px oklch(25% .012 150/.08);
+  --cs-shadow-panel:0 20px 25px -5px oklch(25% .012 150/.1),0 8px 10px -6px oklch(25% .012 150/.1);
+  --cs-shadow-hover:0 4px 14px oklch(25% .012 150/.15);
+  --cs-font:'Pretendard Variable',Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+  --cs-font-quote:'Gowun Batang','Nanum Myeongjo',serif;
+  /* --cs-h1 만 모바일 우선으로 하한을 낮춘다(360폭 H1 한 줄 넘침 · FINDINGS perf-mobile-5).
+     계약값 clamp(1.625rem,3.4vw,3rem) 은 §15 ≥768 에서 그대로 복원한다(768에서 3.4vw=26.1px 로 연속). */
+  --cs-h1:clamp(1.375rem,6.7vw,1.625rem); --cs-h1-lh:1.25; --cs-h1-track:-0.01em;
+  --cs-sub:clamp(1rem,1.4vw,1.125rem); --cs-sub-lh:1.6;
+  --cs-page-title:clamp(2rem,5vw,56px); --cs-h2:clamp(1.5rem,2.6vw,40px);
+  --cs-radius-card:16px; --cs-radius-bar:12px; --cs-radius-btn:10px; --cs-radius-pill:9999px;
+  --cs-gap-stack:10px; --cs-header-blur:0;
+  --cs-scene-dwell:16s; --cs-stage-lock:hidden;
+  --cs-ease-out:cubic-bezier(.23,1,.32,1);
+  --cs-t-fast:.2s; --cs-t-text-out:200ms; --cs-t-text-in:400ms; --cs-t-video:400ms;
+  --cs-t-dd-in:.22s; --cs-t-dd-item:.32s; --cs-dd-stagger:70ms; --cs-wheel-lock:700ms;
+  --cs-focus-w:2px; --cs-focus-offset:3px;
+}
+
+/* 1-2. 기하 토큰 기본값 = 390 (CONTRACT §4-2 첫 열) */
+:root{
+  --cs-page-x:24px;
+  --cs-page-top:26px;
+  --cs-page-bottom:16px;
+  --cs-header-h:61px;
+  --cs-header-pad:8px 20px;   /* 세로 10 → 8: 헤더 61(내용상자 60) 안에 터치 타깃 44 가 정확히 들어간다(60−16=44). 헤더 높이·가로 20 불변 */
+  --cs-nav-gap:12px;
+  --cs-card-h:calc(100vh - 247px);
+  --cs-track-left:16px;  --cs-track-right:24px;
+  --cs-track-bottom:72px;
+  --cs-track-max:92%;
+  --cs-cta-h:48px;  --cs-cta-font:14px;  --cs-cta-pad:12px 14px;  --cs-cta-gap:10px;
+  --cs-pager-right:50%;  --cs-pager-bottom:16px;
+  --cs-seg-w:28px;  --cs-seg-h:3px;
+  /* <1200 컨트롤 한 줄 총폭 = 44(이전) + 6×seg-hit + 44(다음) + 44(정지) ≤ 카드폭(100vw - 48).
+     360폭까지 넘치지 않도록 seg-hit 를 폭에 비례시키고 계약값 36 을 상한으로 둔다(≥768은 36 재선언). */
+  --cs-seg-hit-w:clamp(24px,calc(16.6vw - 31px),36px);  --cs-hit:44px;
+  --cs-footer-h:auto;
+  --cs-dd-mega-mt:12px;  --cs-dd-center-mt:28px;  --cs-dd-center-w:560px;
+  --cs-tab-w:100%;  --cs-tab-h:52px;
+  /* 텍스트 밴드 스크림(§6 .stage__overlay 2번째 레이어)의 앵커. 카드 높이 비율로 고정하면
+     세로로 긴 모바일 크롭에서 H1 이 램프 위쪽(투명 구간)으로 올라가 밝은 영상 위에 흰 글자가 남는다
+     (390 장면2 실측 루마 159 · 2.8:1 · FINDINGS mobile-1·fidelity-1·fresh-3).
+     기본 티어는 트랙이 카드 상단 31% 부터 시작하므로 스크림도 그 위에서 시작한다. ≥1200 은 계약값(35/75) 복원. */
+  --cs-scrim-top:0%;  --cs-scrim-full:26%;  --cs-scrim-a:.45;
+  --cs-form-w:100%;  --cs-form-pad:24px 16px;
+  --cs-inner-max:100%;
+  --cs-quote-size:20px;
+  --cs-content-scale:1;
+}
+
+/* 카드 높이는 dvh 가 아니라 svh 로 잡는다. dvh 는 모바일 툴바가 접힐 때 60~100px 커져
+   스크롤 도중 카드가 늘어난다(레이아웃 시프트). 미지원 브라우저는 위 vh 값을 그대로 쓴다.
+   body{min-height:100dvh} 는 그대로 (FINDINGS perf-mobile-7) */
+@supports (height:100svh){
+  :root{ --cs-card-h:calc(100svh - 247px) }
+}
+
+/* 1-3. styles 내부 전용 (다른 파일이 참조하지 않는다) */
+:root{
+  --cs-x-error:oklch(48% .16 28);
+  --cs-x-error-tint:oklch(96% .018 28);
+  --cs-x-valid:oklch(62% .07 155);
+  --cs-x-field-bg:oklch(99.2% .004 95);
+  /* 폼 컨트롤 전용 보더: hair(1.4:1)는 WCAG 1.4.11(비텍스트 3:1) 미달이라 입력 상자에만 별도 값 */
+  --cs-x-field-border:oklch(58% .015 110);
+  --cs-x-media-dim:oklch(20% .015 150/.5);
+  --cs-x-media-hover:oklch(98% .005 95/.14);
+  --cs-x-section-gap:48px;
+  /* 타이포 스케일 (12~20 사이 1px 9단계를 5단으로 정리 · FINDINGS craft-contract-5).
+     본문 기본 = md. 새 크기를 이 목록 밖에서 만들지 않는다. */
+  --cs-text-xs:12px;  --cs-text-sm:14px;  --cs-text-md:16px;
+  --cs-text-lg:20px;  --cs-text-xl:25px;
+}
+
+
+/* 2. 리셋 -------------------------------------------------------------------- */
+
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;background:var(--cs-paper)}
+body{
+  margin:0;min-height:100dvh;display:flex;flex-direction:column;gap:var(--cs-gap-stack);
+  padding:var(--cs-page-top) var(--cs-page-x) var(--cs-page-bottom);
+  background:var(--cs-paper);color:var(--cs-ink);
+  font:400 16px/1.6 var(--cs-font);-webkit-font-smoothing:antialiased;word-break:keep-all;
+  overflow-x:hidden;
+}
+body.menu-open{overflow:hidden}
+h1,h2,h3,h4,p,figure,blockquote,ul,ol,dl,dd,fieldset,legend{margin:0}
+ul,ol{padding:0}
+fieldset{padding:0;border:0;min-width:0}
+legend{padding:0}
+img,svg,video{display:block;max-width:100%}
+img{height:auto}
+button,input,select,textarea{font:inherit;color:inherit;margin:0}
+button{background:none;border:0;padding:0;cursor:pointer;text-align:inherit}
+a{color:var(--cs-pine);text-decoration-thickness:1px;text-underline-offset:.15em}
+abbr[title]{text-decoration:none;border:0}
+address{font-style:normal}
+table{border-collapse:collapse;border-spacing:0}
+::selection{background:var(--cs-pine-tint);color:var(--cs-ink)}
+
+:focus-visible{outline:var(--cs-focus-w) solid var(--cs-pine);outline-offset:var(--cs-focus-offset)}
+.stage :focus-visible,
+.bridge-hero :focus-visible{outline-color:var(--cs-on-media)}
+
+
+/* 3. 유틸 -------------------------------------------------------------------- */
+
+[hidden]{display:none!important}
+
+.visually-hidden{
+  position:absolute!important;width:1px;height:1px;margin:-1px;padding:0;border:0;
+  overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;
+}
+
+.skip-link{
+  position:absolute;left:var(--cs-page-x);top:-100px;z-index:100;
+  padding:12px 16px;border-radius:var(--cs-radius-btn);
+  background:var(--cs-pine);color:var(--cs-paper);font-weight:600;text-decoration:none;
+}
+.skip-link:focus-visible{top:8px;outline-color:var(--cs-ink)}
+
+/* 국문 어절 묶음. `word-break:keep-all` 은 음절 분리만 막고 닫는 괄호 뒤(UAX-14 CL)는 그대로 줄바꿈
+   기회라 「제주자랑(주)」/「은 역할이…」처럼 법인명과 조사가 갈린다. 빌드가 이 span 으로 묶는다
+   (FINDINGS mobile-5·fresh-5·fresh-12) */
+.nb{white-space:nowrap}
+
+.badge--draft{
+  display:inline-flex;align-items:center;height:22px;padding:0 8px;margin-left:6px;
+  border-radius:6px;background:var(--cs-paper-deep);color:var(--cs-ink-soft);
+  font:600 var(--cs-text-xs)/1 var(--cs-font);vertical-align:middle;white-space:nowrap;
+}
+
+.scroll-progress{
+  position:fixed;top:0;left:0;z-index:60;height:3px;width:0;
+  background:var(--cs-pine);pointer-events:none;
+}
+
+
+/* 4. 버튼 (8상태: default · hover · focus-visible · active · disabled · loading · error · success) */
+
+.btn{
+  position:relative;display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  height:52px;padding:14px 28px;border:0;border-radius:var(--cs-radius-btn);
+  font:600 var(--cs-text-md)/1.5 var(--cs-font);text-decoration:none;white-space:nowrap;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+  transition:transform var(--cs-t-fast) var(--cs-ease-out);
+}
+.btn::after{
+  content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  box-shadow:var(--cs-shadow-hover);opacity:0;
+  transition:opacity var(--cs-t-fast) var(--cs-ease-out);
+}
+@media (hover:hover){
+  .btn:hover{transform:translateY(-1px)}
+  .btn:hover::after{opacity:1}
+  .btn--ghost:hover{background:var(--cs-x-media-hover)}
+  .btn--pine:hover{background:var(--cs-pine-deep)}
+  .btn--outline:hover{background:var(--cs-pine-tint)}
+  .btn--primary:hover{background:var(--cs-paper-deep)}
+}
+.btn:active{transform:scale(.97);transition-duration:160ms}
+.btn:active::after{opacity:0}
+.btn:disabled,.btn[aria-disabled="true"]{opacity:.5;pointer-events:none}
+
+.btn--primary{background:var(--cs-paper);color:var(--cs-ink)}
+.btn--ghost{background:transparent;color:var(--cs-paper);box-shadow:inset 0 0 0 1.5px var(--cs-paper)}
+.btn--pine{background:var(--cs-pine);color:var(--cs-paper)}
+.btn--outline{background:transparent;color:var(--cs-pine);box-shadow:inset 0 0 0 1.5px var(--cs-pine)}
+.btn--sm{height:var(--cs-hit);padding:10px 20px;font-size:var(--cs-text-xs)}  /* 터치 타깃 44 (BUILD_PLAN §7-2) */
+
+
+/* 5. 헤더 (CONTRACT §3-2 · 떠 있는 둥근 바 61 · 불투명 paper · 블러 0) --------- */
+
+.site-header{
+  position:sticky;top:0;z-index:50;
+  height:var(--cs-header-h);
+  background:var(--cs-paper);border-bottom:1px solid var(--cs-hair);
+  border-radius:var(--cs-radius-bar);
+}
+.site-header__bar{
+  position:static;height:100%;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:var(--cs-header-pad);
+}
+.site-header__actions{display:flex;align-items:center;gap:12px}
+
+/* 로고는 홈으로 가는 실제 링크다 — 모든 폭에서 노출되므로 터치 타깃 44 (BUILD_PLAN §7-2 · FINDINGS a11y-10).
+   헤더 내용상자가 60(61 − 보더 1) − 세로 패딩 16 = 44 라 헤더 높이·로고 이미지 28 은 불변 */
+.site-header__logo{
+  display:inline-flex;align-items:center;min-height:var(--cs-hit);flex:none;
+  color:var(--cs-ink);text-decoration:none;
+}
+.site-header__logo img{height:28px;width:auto}
+.site-header__wordmark{font:800 var(--cs-text-lg)/1 var(--cs-font);letter-spacing:-0.01em;white-space:nowrap}
+/* 첫 화면에서 「어느 단체인가」에 답하는 한 줄. 뿌리 설명이 5번째 장면에 있어 첫 3초에 주체가 없었다
+   (FINDINGS fresh-6). 폭이 모자라는 구간에서 내비를 밀지 않도록 ≥1200 에서만 노출한다 */
+.site-header__descriptor{display:none}
+
+.site-nav{display:none;position:static;min-width:0}
+.site-nav__list{display:flex;align-items:center;gap:var(--cs-nav-gap);list-style:none}
+.site-nav__item{position:static;display:block}
+.site-nav__item[data-nav="family"]{position:relative}
+.site-nav__link,
+.site-nav__trigger{
+  display:inline-flex;align-items:center;gap:4px;min-height:var(--cs-hit);padding:12px 8px;
+  border-radius:8px;color:var(--cs-ink);font:600 var(--cs-text-sm)/20px var(--cs-font);
+  text-decoration:none;white-space:nowrap;cursor:pointer;background:none;border:0;
+}
+@media (hover:hover){
+  .site-nav__link:hover,.site-nav__trigger:hover{color:var(--cs-pine)}
+}
+.site-nav__link:active,.site-nav__trigger:active{background:var(--cs-paper-deep)}
+.site-nav__link[aria-current="page"],
+.site-nav__trigger[aria-expanded="true"]{color:var(--cs-pine)}
+.site-nav__chevron{width:12px;height:12px;flex:none;transition:transform .15s var(--cs-ease-out)}
+.site-nav__trigger[aria-expanded="true"] .site-nav__chevron{transform:rotate(180deg)}
+
+.site-header__cta{display:none;flex:none}
+
+.site-header__burger{
+  display:inline-flex;align-items:center;justify-content:center;flex:none;
+  width:var(--cs-hit);height:var(--cs-hit);border-radius:8px;color:var(--cs-ink);
+}
+.site-header__burger svg{width:20px;height:20px}
+@media (hover:hover){ .site-header__burger:hover{background:var(--cs-paper-deep)} }
+.site-header__burger:active{transform:scale(.94)}
+
+/* 5-1. 드롭다운 패널 (REF §1-5 기하 · 진입 fade .22s + 항목 fade-in-down .32s 스태거 70ms) */
+.site-nav__panel{
+  position:absolute;z-index:60;top:100%;
+  background:var(--cs-paper);border-radius:var(--cs-radius-card);
+  box-shadow:var(--cs-shadow-panel);
+  animation:dd-in var(--cs-t-dd-in) ease-out both;
+}
+.site-nav__panel--mega{left:0;right:0;margin-top:var(--cs-dd-mega-mt);padding:4px}
+/* 패밀리 패널: <1200 에서는 트리거(헤더 우측)를 중심으로 펴면 뷰포트 오른쪽을 넘어 잘린다.
+   기본은 트리거 우측 정렬, 중앙 정렬은 ≥1200 에서만 (FINDINGS perf-mobile-13) */
+.site-nav__panel--center{
+  right:0;left:auto;width:var(--cs-dd-center-w);max-width:calc(100vw - 2 * var(--cs-page-x));
+  margin-top:var(--cs-dd-center-mt);padding:24px;
+}
+@keyframes dd-in{from{opacity:0}}
+@keyframes dd-item{from{opacity:0;transform:translateY(-10px)}}
+
+.panel-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;list-style:none}
+.panel-list{display:grid;gap:4px;list-style:none}
+.panel-grid > li,
+.panel-list > li,
+.panel-intro{animation:dd-item var(--cs-t-dd-item) ease-out both}
+.panel-grid > li:nth-child(1),.panel-list > li:nth-child(1){animation-delay:0ms}
+.panel-grid > li:nth-child(2),.panel-list > li:nth-child(2){animation-delay:calc(var(--cs-dd-stagger) * 1)}
+.panel-grid > li:nth-child(3),.panel-list > li:nth-child(3){animation-delay:calc(var(--cs-dd-stagger) * 2)}
+.panel-grid > li:nth-child(4),.panel-list > li:nth-child(4){animation-delay:calc(var(--cs-dd-stagger) * 3)}
+
+.panel-intro{margin:0 0 16px;font-size:var(--cs-text-sm);line-height:1.6;color:var(--cs-ink-soft)}
+
+div.panel-card{display:flex;flex-direction:column;gap:4px;min-width:0;padding:4px;border-radius:var(--cs-radius-bar)}
+button.panel-card{
+  display:flex;flex-direction:column;gap:12px;width:100%;min-width:0;padding:4px;
+  border-radius:var(--cs-radius-bar);color:var(--cs-ink);text-align:left;
+  transition:transform var(--cs-t-fast) var(--cs-ease-out);
+}
+@media (hover:hover){
+  button.panel-card:hover{background:var(--cs-paper-deep)}
+}
+button.panel-card:active{transform:scale(.985)}
+.panel-card__img{
+  width:100%;aspect-ratio:16/10;min-height:120px;object-fit:cover;
+  border-radius:8px;background:var(--cs-stage-dark);
+}
+.panel-card__title{display:block;font:600 var(--cs-text-md)/1.3 var(--cs-font);color:var(--cs-ink);padding:0 4px}
+/* <button> 안에는 phrasing 만 올 수 있어 p 대신 span 을 쓴다(FINDINGS craft-contract-11) → display:block 필요 */
+.panel-card__desc{display:block;font-size:var(--cs-text-sm);line-height:1.5;color:var(--cs-ink-soft);padding:0 4px 4px}
+.panel-card__more{
+  display:inline-flex;align-items:center;min-height:var(--cs-hit);padding:0 8px;align-self:flex-start;
+  border-radius:8px;color:var(--cs-pine);font:600 var(--cs-text-sm)/1 var(--cs-font);text-decoration:none;
+}
+@media (hover:hover){ .panel-card__more:hover{background:var(--cs-pine-tint)} }
+.panel-card__more:active{background:var(--cs-pine-tint);transform:scale(.97)}
+
+/* 패밀리 패널: 행형 카드 */
+.panel-list > li{display:flex;align-items:center;gap:8px;min-height:44px;border-radius:var(--cs-radius-bar)}
+.panel-list button.panel-card{flex:1;flex-direction:row;align-items:center;gap:12px;padding:8px}
+.panel-list .panel-card__img{width:56px;height:56px;min-height:0;aspect-ratio:1/1;flex:none}
+.panel-list .panel-card__title{padding:0;font-size:var(--cs-text-md)}
+.panel-list .panel-card__desc{padding:0;font-size:var(--cs-text-sm)}
+.panel-list > li > a.panel-card__more:only-child{
+  flex:1;justify-content:flex-start;padding:8px 12px;font-size:var(--cs-text-md);color:var(--cs-ink);
+}
+
+/* 5-2. 모바일 메뉴 (<876 · 헤더 아래 카드 · 열림 동안 body.menu-open) */
+.mobile-menu{
+  position:absolute;left:0;right:0;top:100%;z-index:80;margin-top:12px;
+  max-height:calc(100dvh - 110px);overflow-y:auto;
+  padding:24px;background:var(--cs-paper);border:1px solid var(--cs-hair);
+  border-radius:var(--cs-radius-bar);
+  animation:dd-in var(--cs-t-dd-in) ease-out both;
+}
+.mobile-menu__inner{max-width:520px;margin:0 auto;display:flex;flex-direction:column}
+.mobile-menu__label{margin:16px 0 4px;font:600 var(--cs-text-xs)/1.4 var(--cs-font);color:var(--cs-ink-soft)}
+.mobile-menu__label:first-child{margin-top:0}
+.mobile-menu ul{list-style:none}
+.mobile-menu__link{
+  display:flex;align-items:center;width:100%;min-height:var(--cs-hit);padding:8px;
+  border-radius:8px;color:var(--cs-ink);font:500 var(--cs-text-md)/1.6 var(--cs-font);
+  text-decoration:none;text-align:left;
+}
+.mobile-menu__link[aria-current="page"]{color:var(--cs-pine);font-weight:600}
+.mobile-menu__link:active{background:var(--cs-paper-deep)}
+.mobile-menu__cta{margin-top:20px;align-self:flex-start}
+
+
+/* 6. 무대 (CONTRACT §3-1 · §4-3) ------------------------------------------ */
+
+main.stage-wrap{display:flex;flex-direction:column;gap:var(--cs-gap-stack);flex:1;min-height:0;position:relative}
+
+.stage{
+  position:relative;height:var(--cs-card-h);min-height:520px;
+  border-radius:var(--cs-radius-card);overflow:hidden;
+  background:var(--cs-stage-dark);box-shadow:var(--cs-shadow-card);
+  /* pan-y 단독은 핀치줌까지 막는다(WCAG 1.4.4). 가로 스와이프 인식에는 pan-x 차단만 필요 */
+  touch-action:pan-y pinch-zoom;color:var(--cs-on-media);
+}
+
+.stage__bg{position:absolute;inset:0;z-index:0}
+.stage__video{position:absolute;inset:0;opacity:0;transition:opacity var(--cs-t-video) linear}
+.stage__video.is-live{opacity:1}
+.stage__poster,
+.stage__vid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 50%}
+.stage__poster:not([src]),
+.stage__poster[src=""]{visibility:hidden}
+/* 슬롯 안 포스터 → 첫 프레임 페이드인. 커밋(슬롯 간 크로스페이드)이 포스터 상태에서 끝나도
+   영상은 첫 프레임이 실제로 그려질 때(playing) 포스터 위로 400ms 겹쳐 들어온다 — 하드 팝 제거.
+   stage.js 가 playing/emptied 에서 .is-playing 을 붙였다 뗀다 (FINDINGS perf-mobile-15) */
+.stage__vid{background:transparent;opacity:0;transition:opacity var(--cs-t-video) linear}
+.stage__vid.is-playing{opacity:1}
+
+/* 오버레이 = 계약 그라디언트 + 텍스트 밴드 국소 스크림 1겹.
+   스크림은 카드 높이 35~100% 를 균일하게 눌러, 텍스트 대비가 포스터·영상 밝기에 의존하지 않게 한다
+   (계약 오버레이만으로는 텍스트가 놓이는 50~65% 밴드 알파가 .25~.3 뿐 · FINDINGS a11y-21) */
+.stage__overlay{
+  position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:
+    linear-gradient(180deg,transparent var(--cs-scrim-top),oklch(14% .012 150/var(--cs-scrim-a)) var(--cs-scrim-full),oklch(14% .012 150/var(--cs-scrim-a)) 100%),
+    var(--cs-overlay);
+}
+/* 밝기 편차는 장면 단위 문제라 장면 단위로 고친다(스크림을 전 장면 일괄로 올리면 어두운 장면이 탁해진다).
+   장면2(웰다잉)만 밝은 실내 포스터라 흰 텍스트가 뜬다 · FINDINGS fresh-3.
+   :has 미지원 브라우저는 기본 스크림(.45)으로 떨어진다 — 그 값만으로도 390 H1 밴드가 5.8:1 이다 */
+.stage:has(.scene.is-active[data-scene-id="welldying"]) .stage__overlay{ --cs-scrim-a:.58 }
+
+.stage__track{
+  position:absolute;left:var(--cs-track-left);right:var(--cs-track-right);bottom:var(--cs-track-bottom);
+  z-index:2;max-width:var(--cs-track-max);
+  /* 확대(텍스트 200%)·짧은 뷰포트에서 카드 밖으로 넘친 카피에 닿을 경로 (FINDINGS a11y-23) */
+  max-height:calc(100% - 72px);overflow-y:auto;overscroll-behavior:contain;
+  /* 🔴 09-06 실측: 기본 상태에서도 트랙이 8px 넘쳐 카드 한가운데 흰 스크롤바가 영상 위에 떴다.
+     여유를 넓히고(88→72 · 116→100), 그래도 넘치는 확대·짧은 뷰포트에서는 카드 톤에 맞는
+     얇은 반투명 스크롤바로 보이게 한다(숨기지 않는다 — 스크롤 가능성은 보여야 한다). */
+  scrollbar-width:thin;scrollbar-color:oklch(100% 0 0 / .32) transparent;
+}
+.stage__track::-webkit-scrollbar{width:6px}
+.stage__track::-webkit-scrollbar-track{background:transparent}
+.stage__track::-webkit-scrollbar-thumb{background:oklch(100% 0 0 / .32);border-radius:3px}
+/* 첫 방문 힌트가 떠 있는 동안에만 트랙 상한을 힌트 밴드(y 12~24) 아래로 내린다.
+   힌트는 <1200 에서 카드 상단 absolute 라, 트랙이 최대로 자라면 y16 까지 올라와 8px 겹쳤다
+   (FINDINGS fidelity-11 ↔ a11y-23 충돌). :has 미지원 브라우저는 종전대로 88 — 겹쳐도 잘리진 않는다 */
+.stage:has(.pager__hint:not([hidden])) .stage__track{max-height:calc(100% - 100px)}
+/* 영상 옵트인 버튼(.pager__video)은 hover:none 에서만 보이고 카드 좌상단 44×44 를 먹는다.
+   글자 200% 확대에서 트랙이 최대로 자라면 H1 첫 줄이 그 버튼 아래로 들어간다(a11y-live-2 실측 36×44 겹침).
+   힌트와 같은 방식으로 트랙 상한을 버튼 밴드 아래로 내린다. ≥768 은 버튼이 없으므로 §15 에서 되돌린다 */
+@media (hover:none){
+  .stage__track{max-height:calc(100% - 100px)}
+  .stage:has(.pager__hint:not([hidden])) .stage__track{max-height:calc(100% - 128px)}
+}
+.scene{
+  /* 🔴 진입 초기값을 아래(+8)에서 위(-8)로 뒤집었다. absolute 자식이라도 아래로 민 8px 는
+     트랙 scrollHeight 에 그대로 더해져 상시 스크롤바를 띄웠다(09-06 실측). 트랙은 bottom 기준이라
+     위로 8px 는 안쪽으로 들어가 넘침이 0 이고, 화면에서는 「제자리로 내려앉는」 같은 크기의 움직임이다. */
+  position:absolute;inset:auto 0 0 0;opacity:0;transform:translateY(-8px);visibility:hidden;
+  transition:opacity var(--cs-t-text-out) ease-out,transform var(--cs-t-text-out) ease-out,visibility 0s var(--cs-t-text-out);
+}
+/* 진입은 퇴장이 끝난 뒤 시작한다(BUILD_PLAN §6-1 「200ms out → 400ms in」).
+   delay 가 없으면 두 장면이 200ms 겹쳐 보인다 (FINDINGS fidelity-6) */
+.scene.is-active{
+  position:relative;opacity:1;transform:none;visibility:visible;
+  transition:opacity var(--cs-t-text-in) var(--cs-ease-out) var(--cs-t-text-out),
+             transform var(--cs-t-text-in) var(--cs-ease-out) var(--cs-t-text-out);
+}
+.scene__h1{
+  font:800 var(--cs-h1)/var(--cs-h1-lh) var(--cs-font);letter-spacing:var(--cs-h1-track);
+  color:var(--cs-on-media);text-shadow:var(--cs-title-shadow);margin:0 0 16px;text-wrap:balance;
+}
+.scene__copy{
+  font-size:var(--cs-sub);line-height:var(--cs-sub-lh);color:var(--cs-on-media-soft);margin:0 0 24px;
+  text-shadow:0 1px 12px oklch(10% .01 150/.25);
+}
+.scene__ctas{display:flex;flex-direction:column;flex-wrap:wrap;gap:var(--cs-cta-gap);align-items:stretch}
+.scene__ctas .btn{width:100%;height:var(--cs-cta-h);padding:var(--cs-cta-pad);font-size:var(--cs-cta-font)}
+
+/* 라이브 영역: 무대 밖 형제. 시각적 숨김은 .visually-hidden 이 맡고 여기서는 흐름 이탈만 보증 */
+.stage__live{position:absolute}
+
+
+/* 7. 페이저 (BUILD_PLAN §6-2 산식 · 세그 28×3, 히트 seg-hit-w×44, 스윕 seg-sweep) */
+
+/* <1200: .pager 가 카드 전체를 덮는 투명 레이어.
+   🔴 이전/다음을 카드 좌우 중앙(top:50%)에 두던 배치는 폐기했다. 텍스트 트랙이 bottom 72 에서
+   위로 400px 자라 세로 중앙(y≈298)을 점유하므로 44 히트와 40 어두운 원이 H1·본문을 덮고 탭을
+   가로챘다(BUILD_PLAN §13 「텍스트 트랙과 겹침 0」 위반 · FINDINGS a11y-9·craft-contract-4·fidelity-4·perf-mobile-1).
+   대신 데스크톱과 같은 순서(이전 · 세그 6 · 다음 · 정지)로 하단 컨트롤 행에 합류시킨다.
+   🔴 행 배치는 left:calc() 절대좌표가 아니라 flex 다. 절대좌표는 폭이 모자랄 때(≤331px) 카드 밖으로
+   삐져나가 overflow:hidden 에 잘렸다(FINDINGS 회귀 · 320폭 4px 넘침). flex 는 남는 폭을 넘지 않는다.
+   총폭 = 44×3(이전·다음·정지) + 6×seg-hit(폭 비례 clamp 24~36, §1-2) ≤ 카드폭(100vw − 48).
+   실측 390 → 334.4 / 360 → 304.6 (둘 다 여유 있음). 설계 하한 360 아래에서만 세 버튼이 40 까지 줄어든다.
+   세그 6개는 서로 붙어 있어 WCAG 2.5.8(최소 24, 간격 예외 없음) 을 하한으로 지킨다 — 44 는 카드폭이
+   모자라 물리적으로 불가능하다(44×9 = 396 > 360폭 카드 312). 근거·판정은 CONTRACT_ISSUES.md 참조.
+   호버 조건 노출을 쓰지 않으므로 터치 기기에서도 그대로 조작된다. */
+.pager{
+  position:absolute;inset:0;z-index:3;pointer-events:none;color:var(--cs-on-media);
+  display:flex;align-items:flex-end;justify-content:center;
+  padding:0 0 var(--cs-pager-bottom);
+}
+.pager > *{pointer-events:auto}
+
+/* 🔴 flex:0 1 auto 는 빈 <button> 이라 내재 폭이 0 → li 가 min-width(24) 합으로 눌렸다.
+   설계값 33.7(390)·36(≥768)·40(≥1200) 대신 하한 24 로 렌더되고 시각 바도 min(28,24)=24 가 됐다
+   (컨트롤 행에 66px 가 남아 있는데도 · FINDINGS mobile-4). 폭을 산식 그대로 명시한다 */
+.pager__segs{
+  display:flex;align-items:center;list-style:none;
+  flex:0 0 calc(var(--cs-seg-hit-w) * 6);min-width:0;
+}
+.pager__segs > li{display:block;flex:0 0 var(--cs-seg-hit-w);min-width:24px}
+.pager__seg{
+  position:relative;display:block;width:100%;height:var(--cs-hit);
+  background:none;border:0;padding:0;cursor:pointer;color:inherit;
+}
+.pager__seg::after,
+.pager__seg::before{
+  content:"";position:absolute;left:50%;top:50%;
+  width:min(var(--cs-seg-w),100%);height:var(--cs-seg-h);border-radius:2px;
+  transform:translate(-50%,-50%);
+}
+.pager__seg::after{background:oklch(98% .005 95/.35)}
+.pager__seg::before{
+  background:var(--cs-on-media);
+  transform:translate(-50%,-50%) scaleX(0);transform-origin:left center;
+}
+.pager__seg.is-active::before{transform:translate(-50%,-50%) scaleX(1)}
+.pager__seg.is-sweeping::before{animation:seg-sweep var(--cs-scene-dwell) linear forwards}
+/* 정지 상태의 시각 진실 — animation-play-state 는 비상속이라 호스트 <button> 인라인 스타일로는 의사요소를
+   멈출 수 없다. 상태 원천인 .stage[data-paused] 를 CSS 가 직접 읽는다(FINDINGS a11y-1·fidelity-1).
+   stage.js 의 WAAPI 제어와 병행 — WAAPI 를 못 쓰는 브라우저에서도 바가 멈춘다 */
+.stage[data-paused="true"] .pager__seg.is-sweeping::before{animation-play-state:paused}
+@keyframes seg-sweep{
+  from{transform:translate(-50%,-50%) scaleX(0)}
+  to{transform:translate(-50%,-50%) scaleX(1)}
+}
+@media (hover:hover){
+  .pager__seg:hover::after{background:oklch(98% .005 95/.55)}
+}
+.pager__seg:active::after{background:oklch(98% .005 95/.7)}
+
+/* 하단 컨트롤 행: 왼쪽부터 이전 · 세그 6 · 다음 · 정지 (DOM = 시각 = 포커스 순서).
+   flex:0 1 로 두어 설계 하한(360) 아래에서만 40 까지 줄고, 그 위에서는 항상 44 를 지킨다 */
+.pager__prev,
+.pager__next,
+.pager__pause{
+  position:relative;display:inline-flex;align-items:center;justify-content:center;
+  flex:0 1 var(--cs-hit);width:var(--cs-hit);height:var(--cs-hit);min-width:40px;border-radius:50%;
+  color:var(--cs-on-media);background:none;border:0;cursor:pointer;padding:0;
+  transition:transform var(--cs-t-fast) var(--cs-ease-out);
+}
+.pager__prev svg,.pager__next svg,.pager__pause svg{width:20px;height:20px;position:relative;z-index:1}
+.pager__prev::before,
+.pager__next::before{
+  content:"";position:absolute;left:50%;top:50%;width:40px;height:40px;border-radius:50%;
+  transform:translate(-50%,-50%);background:var(--cs-x-media-dim);
+}
+@media (hover:hover){
+  .pager__pause:hover{background:var(--cs-x-media-hover)}
+  .pager__prev:hover::before,.pager__next:hover::before{background:oklch(20% .015 150/.7)}
+}
+.pager__prev:active,
+.pager__next:active,
+.pager__pause:active{transform:scale(.94)}
+
+/* 첫 방문 힌트: 컨트롤 행 위(트랙 바닥 72와 4px 겹침)가 아니라 카드 상단 중앙에 둔다
+   (트랙·컨트롤의 12px 간격을 힌트가 깨지 않게 · FINDINGS fidelity-11) */
+.pager__hint{
+  position:absolute;left:50%;top:12px;transform:translateX(-50%);
+  font:600 var(--cs-text-xs)/1 var(--cs-font);color:var(--cs-on-media-soft);white-space:nowrap;
+  text-shadow:0 1px 8px oklch(10% .01 150/.4);
+}
+
+/* 모바일 영상 옵트인(BUILD_PLAN §8 「사용자가 재생 버튼을 누르면 로드」).
+   컨트롤 행에 넣으면 총폭이 44 늘어 카드폭을 넘기므로 카드 좌상단에 둔다(트랙은 하단 정렬이라 겹침 0).
+   노출 조건 = 영상이 자동 재생되지 않는 기기뿐: hover 가 있거나(마우스) ≥768 이면 숨긴다 */
+.pager__video{
+  position:absolute;top:8px;left:8px;
+  display:inline-flex;align-items:center;justify-content:center;
+  width:var(--cs-hit);height:var(--cs-hit);border-radius:50%;padding:0;
+  color:var(--cs-on-media);background:none;border:0;cursor:pointer;
+}
+.pager__video svg{width:20px;height:20px;position:relative;z-index:1}
+.pager__video::before{
+  content:"";position:absolute;left:50%;top:50%;width:40px;height:40px;border-radius:50%;
+  transform:translate(-50%,-50%);background:var(--cs-x-media-dim);
+}
+.pager__video:active{transform:scale(.94)}
+/* 라벨 고정 + aria-pressed 로 상태를 말한다(라벨을 뒤집으면 상태가 거꾸로 읽힌다 · a11y-12).
+   시각 상태는 원 배경 밝기로만 구분한다(아이콘 교체 없음) */
+.pager__video[aria-pressed="true"]::before{background:var(--cs-pine-deep)}
+@media (hover:hover){ .pager__video{display:none} }
+
+
+/* 8. 모바일 장면 목차 (BUILD_PLAN §6-4 · 행 44 · ≥1200 숨김) ------------------ */
+
+.scene-list{list-style:none;display:flex;flex-direction:column;border-top:1px solid var(--cs-hair)}
+.scene-list > li{display:block}
+.scene-list__item{
+  display:flex;align-items:center;width:100%;height:var(--cs-hit);padding:0 8px;
+  border-bottom:1px solid var(--cs-hair);color:var(--cs-ink);
+  font:500 var(--cs-text-md)/1 var(--cs-font);text-align:left;cursor:pointer;
+}
+/* 상태 원천은 aria-current 하나 — 클래스와 속성을 둘 다 쓰면 SSR·JS 가 어긋난다 (FINDINGS a11y-15) */
+.scene-list__item[aria-current="true"]{color:var(--cs-pine);font-weight:700}
+@media (hover:hover){ .scene-list__item:hover{color:var(--cs-pine)} }
+.scene-list__item:active{background:var(--cs-paper-deep)}
+
+
+/* 9. 푸터 3행 (CONTRACT §3-4 · BUILD_PLAN §7-3) ------------------------------- */
+
+/* 가로 패딩 18 + 링크 인셋 2 = 20 → 헤더 워드마크(--cs-header-pad 20)와 같은 좌측 기준선.
+   옛 12 는 푸터 글자를 헤더보다 6px 왼쪽에 두어 첫 화면에 어긋난 기준선 둘을 만들었다(FINDINGS fresh-15) */
+.site-footer{
+  display:flex;flex-direction:column;gap:4px;padding:12px 18px;
+  font-size:var(--cs-text-xs);line-height:1.5;color:var(--cs-ink-soft);
+}
+/* 히트 영역은 세로(min-height)만이 아니라 가로도 하한이 필요하다 — 「소개」·「조직」처럼 2글자 링크는
+   폭이 25px 에 그친다(09-06 실측). 글자는 왼쪽에 두고 영역만 넓혀 정렬은 그대로 둔다. */
+.site-footer a{color:var(--cs-pine);text-decoration:none;display:inline-flex;align-items:center;justify-content:flex-start;min-height:var(--cs-hit);min-width:var(--cs-hit);padding:0 2px}
+@media (hover:hover){ .site-footer a:hover{text-decoration:underline} }
+.site-footer a:active{text-decoration:underline;color:var(--cs-pine-deep)}
+.site-footer ul{list-style:none;display:flex;flex-wrap:wrap;gap:0 24px;align-items:center}
+
+.site-footer__sitemap{position:relative}
+.site-footer__sitemap > summary{
+  display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 4px;
+  list-style:none;cursor:pointer;color:var(--cs-pine);font-weight:600;
+}
+.site-footer__sitemap > summary::-webkit-details-marker{display:none}
+.site-footer__sitemap > summary::after{
+  content:"";width:6px;height:6px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;
+  transform:translateY(-2px) rotate(45deg);transition:transform .15s var(--cs-ease-out);
+}
+.site-footer__sitemap[open] > summary::after{transform:translateY(1px) rotate(-135deg)}
+.site-footer__sitemap > ul{padding:0 4px}
+
+.site-footer__family{display:flex;flex-wrap:wrap;align-items:center;gap:0 16px}
+.site-footer__family-label{font-weight:600;color:var(--cs-ink);display:inline-flex;align-items:center;min-height:44px}
+
+.site-footer__legal{display:flex;flex-wrap:wrap;align-items:center;gap:0 16px}
+.site-footer__legal > span,
+.site-footer__legal address{display:inline-flex;align-items:center;min-height:44px;flex-wrap:wrap;gap:0 12px}
+
+/* 홈 접힘 (≥1200에서 가로 정렬, 사이트맵은 위로 펼침). 높이는 하한만 두고 내용이 넘치면 늘어난다 */
+body.is-home .site-footer{min-height:var(--cs-footer-h)}
+
+
+/* 10. 서브 셸 (REF §5-2 · page-main · ScrollProgress · 진입 모션) ------------- */
+
+main.page-main{flex:1;padding:2rem 24px 3rem;position:relative}
+.page-main__inner{
+  width:100%;max-width:var(--cs-inner-max);margin:0 auto;
+  animation:page-in .4s var(--cs-ease-out) both;
+}
+@keyframes page-in{from{opacity:0;transform:translateY(8px)}}
+.page-main__inner > * + *{margin-top:var(--cs-x-section-gap)}
+
+:where(.page-main) :where(h2){font:800 var(--cs-h2)/1.3 var(--cs-font);letter-spacing:-0.01em;margin:0 0 16px;color:var(--cs-ink)}
+:where(.page-main) :where(h3){font:600 clamp(1.25rem,1.6vw,25px)/1.3 var(--cs-font);margin:0 0 12px;color:var(--cs-ink)}
+:where(.page-main) :where(p){margin:0 0 1em}
+:where(.page-main) :where(p:last-child){margin-bottom:0}
+:where(.page-main) :where(ul,ol){padding-left:1.25em;margin:0 0 1em}
+:where(.page-main) :where(li + li){margin-top:.35em}
+:where(.page-main) :where(table){width:100%;display:block;overflow-x:auto;font-size:var(--cs-text-sm);line-height:1.5}
+:where(.page-main) :where(th,td){padding:12px;border-bottom:1px solid var(--cs-hair);text-align:left;vertical-align:top}
+:where(.page-main) :where(th){font-weight:600;color:var(--cs-ink)}
+:where(.page-main) :where(thead th){border-bottom-width:2px}
+.table-wrap,.doc__table-wrap{overflow-x:auto}
+
+/* 문서형 목차 (privacy · ol.hero-doc__lead.doc-toc) */
+.doc-toc{list-style:none;padding:0;margin:0 auto;display:flex;flex-wrap:wrap;justify-content:center;gap:0 20px}
+.doc-toc li + li{margin-top:0}
+.doc-toc a{display:inline-flex;align-items:center;min-height:var(--cs-hit);padding:0 2px;font-weight:600;text-decoration:none}
+@media (hover:hover){ .doc-toc a:hover{text-decoration:underline} }
+.doc-toc a:active{text-decoration:underline;color:var(--cs-pine-deep)}
+:where(.page-main) :where(pre,code){overflow-x:auto}
+
+body.is-doc .page-main__inner{max-width:760px}
+body.is-doc .page-main__inner > * + *{margin-top:32px}
+/* doc.html 은 절을 article.doc > section.doc__section 으로 한 겹 더 감싼다.
+   위 규칙은 .page-main__inner 의 직계(= article.doc 하나)에만 걸려 5개 절 사이 간격이 0 이 된다
+   (h2 margin-bottom 16 · p:last-child margin-bottom 0). 래퍼 안에서도 같은 리듬을 준다. */
+.doc > * + *{margin-top:32px}
+
+
+/* 11. 서브 컴포넌트 (CONTRACT §3-3 · REF §5-3·§5-4) --------------------------- */
+
+/* 11-1. 문서형 히어로 */
+.hero-doc{text-align:center;max-width:990px;margin-left:auto;margin-right:auto}
+.hero-doc__title{
+  font:800 var(--cs-page-title)/1.25 var(--cs-font);letter-spacing:-0.01em;
+  color:var(--cs-ink);margin:0 0 20px;text-wrap:balance;
+}
+/* 좁은 단에서 5~6줄짜리 국문 리드를 가운데 정렬하면 오른쪽 끝이 들쭉날쭉해 읽기 부담이 커지고,
+   바로 아래 좌측 정렬 블록과 기준선이 갈린다(FINDINGS mobile-6·mobile-12·fresh-17). 제목만 가운데로 두고
+   본문은 왼쪽에서 시작한다. ≥768 은 단이 넓어지므로 §15 에서 가운데로 되돌린다 */
+.hero-doc__lead{font-size:var(--cs-text-md);line-height:1.6;color:var(--cs-ink-soft);max-width:990px;margin:0 auto;text-align:left}
+
+/* 11-2. 탭 스위처 (트랙 945×52 r9999 pad 4 paper-deep, 활성 밝은 필 shadow 0 1px 3px) */
+/* 라벨(「기업·단체 제휴 신청」)이 360~390 슬롯에서 잘리던 문제: 말줄임을 걷고 2줄을 허용한다.
+   1차 내비를 자르는 것은 어절 꺾임보다 나쁘다 (FINDINGS craft-contract-9·perf-mobile-6) */
+.tabs{
+  display:flex;width:var(--cs-tab-w);max-width:100%;min-height:var(--cs-tab-h);padding:4px;
+  margin-left:auto;margin-right:auto;
+  background:var(--cs-paper-deep);border-radius:var(--cs-radius-pill);
+}
+.tabs__tab{
+  flex:1;display:inline-flex;align-items:center;justify-content:center;min-width:0;padding:0 8px;
+  border-radius:var(--cs-radius-pill);color:var(--cs-ink-soft);
+  font:600 var(--cs-text-sm)/1.2 var(--cs-font);text-decoration:none;text-align:center;
+  transition:transform var(--cs-t-fast) var(--cs-ease-out);
+}
+@media (hover:hover){ .tabs__tab:hover{color:var(--cs-ink)} }
+.tabs__tab:active{transform:scale(.98)}
+.tabs__tab[aria-current="page"]{
+  background:var(--cs-x-field-bg);color:var(--cs-ink);
+  box-shadow:0 1px 3px oklch(25% .012 150/.12);
+}
+
+/* 11-3. 미디어 카드 그리드 (2열 461×404 gap 24 r16 pad 4 / 1열) */
+.media-grid{list-style:none;display:grid;grid-template-columns:minmax(0,1fr);gap:24px;max-width:945px;margin-left:auto;margin-right:auto;padding:0}
+.media-card{
+  border-radius:var(--cs-radius-card);padding:4px;background:var(--cs-paper);
+  box-shadow:var(--cs-shadow-card);transition:transform var(--cs-t-fast) var(--cs-ease-out);
+}
+@media (hover:hover){ .media-card:hover{transform:translateY(-2px)} }
+.media-card:active{transform:scale(.99)}
+.media-card > a{display:flex;flex-direction:column;min-height:var(--cs-hit);color:var(--cs-ink);text-decoration:none;border-radius:12px}
+.media-card img{width:100%;min-height:140px;aspect-ratio:412/273;object-fit:cover;border-radius:12px;background:var(--cs-paper-deep)}
+.media-card__body{padding:24px}
+.media-card h3,.media-card strong{display:block;font:600 var(--cs-text-lg)/1.3 var(--cs-font);color:var(--cs-ink);margin:0}
+.media-card p{font-size:var(--cs-text-sm);line-height:1.6;color:var(--cs-ink-soft);margin:8px 0 0}
+.media-card__meta{font-size:var(--cs-text-xs);color:var(--cs-pine);font-weight:600;margin-bottom:8px}
+/* 고객 자료 대기 카드: 공백 없는 긴 토큰이 들어와도 배경 밖으로 나가지 않는다(FINDINGS fidelity-7·mobile-6).
+   대기 블록은 화면에서 감추지만(hidden), 자료가 들어와 노출되는 순간의 회귀도 여기서 함께 막는다 */
+.media-card--pending,
+.person-card--pending{padding:24px;min-width:0;overflow-wrap:anywhere}
+.state-note{
+  max-width:945px;margin-left:auto;margin-right:auto;padding:24px;
+  border:1px dashed var(--cs-hair);border-radius:var(--cs-radius-card);
+  background:var(--cs-paper);color:var(--cs-ink-soft);
+  font-size:var(--cs-text-md);line-height:1.7;
+}
+
+/* 11-4. 2열 사설 + 스티키 이미지 (442 + 442 gap 60 / 1열 이미지 먼저) */
+.essay{display:grid;grid-template-columns:minmax(0,1fr);gap:32px;max-width:945px;margin-left:auto;margin-right:auto;align-items:start}
+.essay__media{order:-1;margin:0}
+.essay__media img{width:100%;max-width:442px;aspect-ratio:1/1;object-fit:cover;border-radius:var(--cs-radius-card);background:var(--cs-stage-dark)}
+.essay__media figcaption{margin-top:8px;font-size:var(--cs-text-xs);color:var(--cs-ink-soft)}
+.essay__text h2{font:600 clamp(1.25rem,1.7vw,24px)/1.25 var(--cs-font);margin:0 0 20px}
+.essay__text p{font-size:var(--cs-text-md);line-height:1.75;color:var(--cs-ink)}
+.essay__text p + p{margin-top:1em}
+.essay.essay--text{grid-template-columns:minmax(0,760px);justify-content:center}
+
+/* 11-5. 인용 (Gowun Batang은 about 1곳만. 다리는 §13에서 Pretendard로 되돌린다) */
+.quote{
+  font:400 var(--cs-quote-size)/1.6 var(--cs-font-quote);color:var(--cs-ink);
+  margin:40px 0;padding:0;text-wrap:balance;
+}
+.quote p{margin:0;font:inherit}
+.quote cite,.quote small,.quote footer{
+  display:block;margin-top:12px;font:500 var(--cs-text-sm)/1.5 var(--cs-font);color:var(--cs-ink-soft);font-style:normal;
+}
+
+/* 11-6. 타임라인 (자리만) */
+.timeline{display:block}
+
+/* 11-7. Featured 35/65 (1105×476 r16 1px hair / 1열) */
+.featured{
+  display:grid;grid-template-columns:minmax(0,1fr);
+  max-width:1105px;margin-left:auto;margin-right:auto;   /* 콘텐츠 컬럼 1105 계승 (REF §5-3) */
+  border:1px solid var(--cs-hair);border-radius:var(--cs-radius-card);overflow:hidden;background:var(--cs-paper);
+}
+.featured__copy{display:flex;flex-direction:column;gap:12px;justify-content:center;padding:28px 24px}
+.featured__copy h2{font:800 var(--cs-h2)/1.2 var(--cs-font);letter-spacing:-0.01em;margin:0}
+.featured__copy p{font-size:var(--cs-text-md);line-height:1.65;color:var(--cs-ink-soft);margin:0}
+.featured__copy .btn{align-self:flex-start;margin-top:8px}
+.featured__tag{display:inline-flex;align-items:center;height:24px;padding:0 10px;border-radius:6px;background:var(--cs-paper-deep);font:600 var(--cs-text-xs)/1 var(--cs-font);color:var(--cs-ink-soft);align-self:flex-start}
+.featured__media{
+  position:relative;order:-1;min-height:220px;background:var(--cs-stage-dark);
+  background-size:cover;background-position:50% 50%;
+}
+.featured__media img,.featured__media video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+
+/* 11-8. 행 스택 25/75 (미디어 276 카피 828 pad 32/48 외곽 1px hair / 1열) */
+.rows{
+  max-width:1105px;margin-left:auto;margin-right:auto;   /* 콘텐츠 컬럼 1105 계승 (REF §5-3) */
+  border:1px solid var(--cs-hair);border-radius:var(--cs-radius-card);overflow:hidden;background:var(--cs-paper);
+}
+.rows__head{padding:24px 24px 8px}
+.rows__head h2{margin:0}
+.row{display:grid;grid-template-columns:minmax(0,1fr)}
+.row + .row,
+.rows__head + .row{border-top:1px solid var(--cs-hair)}
+.row__media{position:relative;min-height:200px;background:var(--cs-paper-deep);background-size:cover;background-position:50% 50%}
+.row__media img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+/* 자료가 오기 전에는 빈 회색 사각형(가짜 미디어)을 그리지 않고 1열 텍스트 행으로 접는다.
+   이미지가 들어오면 자동으로 2열로 복귀한다 (FINDINGS craft-contract-17) */
+.row__media:empty{display:none}
+.row:has(.row__media:empty){grid-template-columns:minmax(0,1fr)}
+.row__copy{padding:24px}
+.row__copy h3{font:600 clamp(1.25rem,1.6vw,25px)/1.3 var(--cs-font);margin:0 0 12px}
+.row__copy p{font-size:var(--cs-text-md);line-height:1.7;color:var(--cs-ink-soft);margin:0}
+.row__copy p + p{margin-top:.75em}
+.row__copy strong{color:var(--cs-ink);font-weight:600}
+
+/* 11-9. 아코디언 (86 gap 12 r16 1px hair) */
+.accordion{display:flex;flex-direction:column;gap:12px;max-width:var(--cs-form-w);margin-left:auto;margin-right:auto}
+.accordion__item{border:1px solid var(--cs-hair);border-radius:var(--cs-radius-card);background:var(--cs-paper)}
+.accordion__item > summary{
+  position:relative;display:flex;align-items:center;gap:16px;min-height:84px;padding:20px 84px 20px 24px;
+  list-style:none;cursor:pointer;font:600 var(--cs-text-md)/1.4 var(--cs-font);color:var(--cs-ink);
+}
+.accordion__item > summary::-webkit-details-marker{display:none}
+.accordion__item > summary::before{
+  content:"";position:absolute;right:20px;top:50%;width:44px;height:44px;border-radius:50%;
+  transform:translateY(-50%);background:var(--cs-paper-deep);
+}
+.accordion__item > summary::after{
+  content:"";position:absolute;right:37px;top:50%;width:9px;height:9px;
+  border-right:1.5px solid var(--cs-ink);border-bottom:1.5px solid var(--cs-ink);
+  transform:translateY(-70%) rotate(45deg);transition:transform var(--cs-t-fast) var(--cs-ease-out);
+}
+.accordion__item[open] > summary::after{transform:translateY(-30%) rotate(-135deg)}
+@media (hover:hover){ .accordion__item > summary:hover::before{background:var(--cs-pine-tint)} }
+.accordion__item > summary:active::before{transform:translateY(-50%) scale(.94)}
+.accordion__item > :not(summary){padding:0 24px 24px;font-size:var(--cs-text-md);line-height:1.7;color:var(--cs-ink-soft)}
+
+/* 11-10. 임원 그리드 (타이포 카드, 3열 / 1열, 가짜 아바타 없음) */
+.people-grid{list-style:none;display:grid;grid-template-columns:minmax(0,1fr);gap:24px;padding:0}
+.person-card{border:1px solid var(--cs-hair);border-radius:var(--cs-radius-card);padding:24px;background:var(--cs-paper)}
+.person-card h3,.person-card__name{font:600 var(--cs-text-lg)/1.3 var(--cs-font);margin:0 0 4px;color:var(--cs-ink)}
+.person-card__role{display:block;font:600 var(--cs-text-sm)/1.4 var(--cs-font);color:var(--cs-pine)}
+.person-card p{font-size:var(--cs-text-sm);line-height:1.6;color:var(--cs-ink-soft);margin:12px 0 0}
+.people-greeting,
+.director__greeting{padding:28px 24px;border:1px solid var(--cs-hair);border-radius:var(--cs-radius-card);font-size:var(--cs-text-md);line-height:1.75}
+.director__name{margin-top:12px;font-weight:600;color:var(--cs-ink)}
+.people-partners{display:block}
+
+
+/* 12. 폼 (CONTRACT §3-5 · §7-1 · 라벨 위, 오류 아래, 상태별) --------------------- */
+
+.form-card{
+  width:100%;max-width:var(--cs-form-w);margin-left:auto;margin-right:auto;padding:var(--cs-form-pad);
+  border:1px solid var(--cs-hair);border-radius:var(--cs-radius-card);background:var(--cs-paper);
+}
+.join-form{display:flex;flex-direction:column;gap:24px}
+
+.field{display:flex;flex-direction:column;gap:8px;min-width:0}
+.field__label,
+.field__group > legend{display:block;font:600 var(--cs-text-sm)/1.4 var(--cs-font);color:var(--cs-ink)}
+.field__group > legend{margin-bottom:8px}
+/* 필수 별표는 시각 전용(`abbr title` 은 대부분의 SR 이 읽지 않는다 · a11y-8).
+   필수 사실은 컨트롤의 required 속성이 말하고, 그게 없는 다중선택 legend 만 visually-hidden 텍스트로 보완한다 */
+.field__req{color:var(--cs-x-error);margin-left:2px;font-weight:700}
+
+.field input[type="text"],
+.field input[type="tel"],
+.field input[type="email"],
+.field select,
+.field textarea{
+  display:block;width:100%;min-height:50px;padding:12px 16px;
+  font:400 var(--cs-text-md)/1.5 var(--cs-font);color:var(--cs-ink);
+  /* 보더는 hair 가 아니라 field-border: 필드 배경(99.2%)과 카드(97.2%)가 거의 같아
+     입력 위치를 알리는 단서가 이 선 하나뿐이다(WCAG 1.4.11 3:1) */
+  background:var(--cs-x-field-bg);border:1px solid var(--cs-x-field-border);border-radius:var(--cs-radius-btn);
+  -webkit-appearance:none;appearance:none;
+}
+.field textarea{min-height:96px;resize:vertical}
+.field select{
+  padding-right:44px;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' fill='none' stroke='rgb(64,74,66)' stroke-width='16' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M208 96l-80 80-80-80'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 14px center;background-size:16px 16px;
+}
+@media (hover:hover){
+  .field input:hover,.field select:hover,.field textarea:hover{border-color:var(--cs-ink-soft)}
+}
+.field input:focus-visible,
+.field select:focus-visible,
+.field textarea:focus-visible{outline-offset:1px;border-color:var(--cs-pine)}
+/* opacity 로 흐리면 합성 대비가 2.6:1 로 떨어진다. ink-soft 원색(7.4:1)을 그대로 쓴다 */
+.field input::placeholder,.field textarea::placeholder{color:var(--cs-ink-soft);opacity:1}
+
+.field[data-valid="true"] input,
+.field[data-valid="true"] select,
+.field[data-valid="true"] textarea{border-color:var(--cs-x-valid)}
+.field [aria-invalid="true"],
+.field[data-valid="false"] input,
+.field[data-valid="false"] select,
+.field[data-valid="false"] textarea{border-color:var(--cs-x-error)}
+
+.field__hint{font-size:var(--cs-text-sm);line-height:1.6;color:var(--cs-ink-soft);margin:0}
+/* 장식 상태 점 없음(BUILD_PLAN §4 금지). 오류는 색 + aria-invalid 보더 + 문구로 전달된다 */
+.field__error{font:500 var(--cs-text-sm)/1.5 var(--cs-font);color:var(--cs-x-error);margin:0}
+
+/* 다중 선택 체크박스 */
+.field__group{display:block}
+.field__group .field__options{display:grid;grid-template-columns:minmax(0,1fr);gap:4px}
+.check{
+  display:flex;align-items:center;gap:10px;min-height:var(--cs-hit);padding:0 6px;
+  border-radius:8px;font-size:var(--cs-text-md);line-height:1.4;color:var(--cs-ink);cursor:pointer;
+}
+@media (hover:hover){ .check:hover{background:var(--cs-paper-deep)} }
+.check:active,.consent:active{background:var(--cs-paper-deep)}
+.check input,
+.consent input{width:20px;height:20px;flex:none;margin:0;accent-color:var(--cs-pine);cursor:pointer}
+.check:has(input:checked){color:var(--cs-pine);font-weight:600}
+
+/* 동의 */
+.consent{
+  display:flex;align-items:flex-start;gap:10px;min-height:var(--cs-hit);padding:4px 0;
+  font-size:var(--cs-text-md);line-height:1.5;color:var(--cs-ink);cursor:pointer;
+}
+/* .field 가 세로 flex 라 배지가 stretch 되어 전폭 회색 띠로 늘어났다(데스크톱 1040폭 · FINDINGS fresh-18).
+   배지는 인라인 크기로 둔다 */
+.field > .badge--draft{align-self:flex-start;margin-left:0}
+.consent input{margin-top:2px}
+.consent a{color:var(--cs-pine)}
+
+/* 허니팟 */
+.field--hp{position:absolute!important;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden}
+
+/* Turnstile */
+.cf-turnstile{min-height:65px}
+
+/* 요약 알림 (폼 카드 상단) */
+.join-form__alert{
+  padding:12px 16px;border:1px solid var(--cs-x-error);border-radius:var(--cs-radius-btn);
+  background:var(--cs-x-error-tint);color:var(--cs-x-error);font:500 var(--cs-text-md)/1.5 var(--cs-font);
+}
+
+/* 제출 · 로딩 */
+.join-form__submit{align-self:stretch}
+.join-form[data-state="submitting"] .join-form__submit{opacity:.6;pointer-events:none}
+/* 상호작용만 막고 시각이 그대로면 「멈췄나」로 읽힌다. disabled 시각을 같이 준다 */
+.join-form[data-state="submitting"] .field{opacity:.6;pointer-events:none}
+
+/* 성공 카드 */
+.join-form__success{
+  padding:32px 24px;border-radius:var(--cs-radius-card);
+  background:var(--cs-pine-tint);color:var(--cs-ink);font-size:var(--cs-text-lg);line-height:1.6;
+}
+.join-form__success p{margin:0}
+.join-form__success .btn{margin-top:20px}
+
+
+/* 13. 다리 페이지 (body.is-bridge · 다크 히어로 → paper 지면) ------------------- */
+
+body.is-bridge main{flex:1}
+.bridge-hero{
+  position:relative;overflow:hidden;
+  padding:clamp(64px,12vw,140px) 24px;border-radius:var(--cs-radius-card);
+  background:var(--cs-stage-dark);color:var(--cs-on-media);text-align:center;
+  animation:page-in .4s var(--cs-ease-out) both;
+}
+.bridge-hero > *{position:relative;max-width:720px;margin-left:auto;margin-right:auto}
+.bridge-hero > * + *{margin-top:24px}
+/* 같은 크기·반경의 어두운 카드인데 미디어가 없어 1120×648 검은 판에 텍스트만 26% 떠 있었다
+   (레퍼런스의 「어두운 카드 = 미디어 카드」 문법과 어긋남 · FINDINGS fidelity-12).
+   무대와 같은 소재(scene5_family)를 깔고 균일 스크림으로 텍스트 대비를 히어로와 동일하게 유지한다 */
+.bridge-hero__media,
+.bridge-hero__scrim{position:absolute;inset:0;max-width:none;width:100%;height:100%;margin:0}
+.bridge-hero__media{object-fit:cover;object-position:50% 50%}
+.bridge-hero__scrim{
+  pointer-events:none;
+  background:linear-gradient(180deg,oklch(14% .012 150/.74),oklch(14% .012 150/.82));
+}
+.bridge-hero h1{
+  font:800 var(--cs-page-title)/1.2 var(--cs-font);letter-spacing:-0.01em;
+  color:var(--cs-on-media);text-shadow:var(--cs-title-shadow);text-wrap:balance;
+}
+.bridge-hero p{font-size:var(--cs-sub);line-height:var(--cs-sub-lh);color:var(--cs-on-media-soft)}
+.bridge-hero .page-main__inner{max-width:720px}
+.bridge-hero .page-main__inner > * + *{margin-top:24px}
+.bridge-body .page-main__inner{max-width:760px}
+.bridge-hero .quote{color:var(--cs-on-media-soft)}
+.bridge-hero .quote cite,.bridge-hero .quote small{color:var(--cs-on-media-soft)}
+.bridge-hero a{color:var(--cs-on-media)}
+
+.bridge-body{
+  padding:clamp(48px,8vw,96px) 24px 3rem;background:var(--cs-paper);color:var(--cs-ink);
+  animation:page-in .4s var(--cs-ease-out) both;animation-delay:.08s;
+}
+.bridge-body > *{max-width:760px;margin-left:auto;margin-right:auto}
+.bridge-body > * + *{margin-top:var(--cs-x-section-gap)}
+.bridge-body p{font-size:var(--cs-text-md);line-height:1.75}
+.bridge-body p + p{margin-top:1em}
+.bridge-body h2{font:800 var(--cs-h2)/1.3 var(--cs-font);letter-spacing:-0.01em;margin:0 0 16px}
+body.is-bridge .quote{font-family:var(--cs-font);font-weight:500}
+.bridge-boundary,
+.bridge-body__note,
+.bridge-body .note{
+  padding:20px 24px;border:1px solid var(--cs-hair);border-radius:var(--cs-radius-card);
+  font-size:var(--cs-text-md);line-height:1.7;color:var(--cs-ink-soft);
+}
+.bridge-ctas{display:flex;flex-direction:column;gap:12px;align-items:stretch}
+/* 세로 스택 구간에서는 라벨을 접을 수 있게 둔다. 「카페 아모르파티 홈페이지」(16px 기준 텍스트 ≈184 + 패딩 56)
+   가 nowrap 이면 좁은 폭에서 컨테이너를 넘어 body{overflow-x:hidden} 에 조용히 잘린다. 높이는 하한으로만 */
+.bridge-ctas .btn{width:100%;white-space:normal;height:auto;min-height:52px;text-align:center}
+.bridge-meta{display:block}
+
+
+/* 14. 404 ------------------------------------------------------------------- */
+
+main.not-found{flex:1;padding:3rem 24px;text-align:center;animation:page-in .4s var(--cs-ease-out) both}
+.not-found h1{font:800 var(--cs-page-title)/1.25 var(--cs-font);letter-spacing:-0.01em;margin:0 0 16px;text-wrap:balance}
+.not-found p{font-size:var(--cs-text-md);line-height:1.6;color:var(--cs-ink-soft);max-width:560px;margin:0 auto}
+.not-found ul{list-style:none;display:flex;flex-wrap:wrap;justify-content:center;gap:0 24px;max-width:760px;margin:32px auto 0;padding:0}
+.not-found li a{display:inline-flex;align-items:center;min-height:var(--cs-hit);padding:0 4px;color:var(--cs-pine);font-weight:600;text-decoration:none}
+@media (hover:hover){ .not-found li a:hover{text-decoration:underline} }
+.not-found li a:active{text-decoration:underline;color:var(--cs-pine-deep)}
+
+
+/* 15. 브레이크포인트 (min-width 전용 · CONTRACT §4-2 · §6) ---------------------- */
+
+/* T ≥768: 트랙 24/24/60, CTA 가로 1줄 52, 미디어 카드 2열, 체크 2열 */
+@media (min-width:768px){
+  :root{
+    --cs-page-top:20px;
+    --cs-page-bottom:0px;
+    /* 계약값 복원(§4-1). 360폭 하한만 기본 티어에서 낮췄다 */
+    --cs-h1:clamp(1.625rem,3.4vw,3rem);
+    --cs-track-left:24px;  --cs-track-right:24px;
+    /* 🔴 계약표의 60 은 CTA 행 바닥과 페이저 행 머리가 정확히 같은 y 에 붙는다(768 실측 ctaBottom 808 = prevY 808).
+       같은 표의 주석이 요구하는 「페이저와 12px 간격」을 지키도록 84 로 올린다 = 간격 24
+       (터치 기기라 44 히트가 서로 붙으면 오탭이 난다 · FINDINGS mobile-10·fidelity-13 · CONTRACT_ISSUES 등록) */
+    --cs-track-bottom:84px;
+    --cs-cta-h:52px;  --cs-cta-font:14px;  --cs-cta-pad:12px 16px;  --cs-cta-gap:16px;
+    --cs-seg-hit-w:36px;   /* 계약값(§4-2). 기본 티어의 폭 비례 clamp 를 여기서 고정한다 */
+    --cs-quote-size:22px;
+    --cs-x-section-gap:64px;
+  }
+  .scene__ctas{flex-direction:row;align-items:center}
+  .scene__ctas .btn{width:auto}
+  /* ≥768 은 영상 자동 경로다(stage.js mobileNoVideo = hover:none · <768). 옵트인 버튼은 필요 없다 */
+  .pager__video{display:none}
+  /* 옵트인 버튼이 없으므로 기본 티어의 트랙 상한 축소(hover:none 100px)를 되돌린다 */
+  @media (hover:none){
+    .stage__track{max-height:calc(100% - 72px)}
+    .stage:has(.pager__hint:not([hidden])) .stage__track{max-height:calc(100% - 100px)}
+  }
+  /* 페이저를 카드 중앙에 띄우면 좌측 CTA 두 개와 축이 갈려 하단이 좌우로 쪼개져 보인다(FINDINGS mobile-10·fresh-20).
+     CTA 와 같은 좌측 기준선(트랙 left 24, 원 지름 40 이 히트 44 안에 2px 인셋)에 맞춘다 */
+  .pager{justify-content:flex-start;padding-left:calc(var(--cs-track-left) - 2px)}
+  .hero-doc__lead{text-align:center}
+  /* 탭 라벨: 슬롯이 충분해지므로 계약 크기·패딩 복원(말줄임은 쓰지 않는다) */
+  .tabs__tab{padding:0 16px;font-size:var(--cs-text-md);line-height:1}
+  .media-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .people-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .field__group .field__options{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .join-form__submit{align-self:flex-start}
+  .bridge-ctas{flex-direction:row;flex-wrap:wrap;justify-content:center}
+  .bridge-ctas .btn{width:auto;white-space:nowrap;height:52px;min-height:0}   /* 가로 1줄 구간은 계약 기하 복원 */
+  :where(.page-main) :where(table){display:table}
+}
+
+/* nav ≥876: 내비 표시 gap 12, 헤더 CTA(btn--sm 40) 표시, 버거 숨김 */
+@media (min-width:876px){
+  :root{ --cs-nav-gap:12px }
+  .site-nav{display:block}
+  .site-header__cta{display:inline-flex}
+  .site-header__burger{display:none}
+  .mobile-menu{display:none!important}
+}
+
+/* D ≥1200: 홈 잠금, body 20/80/0, 카드 flex:1, 트랙 80/80/40 max 600, 페이저 우하 50/40 총폭 372 */
+@media (min-width:1200px){
+  :root{
+    --cs-page-x:80px;
+    --cs-page-top:20px;
+    --cs-page-bottom:0px;
+    --cs-nav-gap:24px;
+    --cs-card-h:auto;
+    --cs-track-left:80px;  --cs-track-right:80px;
+    --cs-track-bottom:40px;
+    --cs-track-max:600px;
+    --cs-cta-h:52px;  --cs-cta-font:16px;  --cs-cta-pad:14px 28px;  --cs-cta-gap:16px;
+    --cs-pager-right:50px;  --cs-pager-bottom:40px;
+    --cs-seg-hit-w:40px;  --cs-hit:44px;
+    --cs-footer-h:44px;
+    --cs-tab-w:945px;
+    --cs-form-w:1040px;  --cs-form-pad:48px 32px;
+    --cs-inner-max:1200px;
+    --cs-quote-size:24px;
+    --cs-x-section-gap:88px;
+    /* 16:9 에 가까운 데스크톱 카드에서는 텍스트 트랙이 하단 밴드에만 놓인다 — 계약 스크림(35~75%) 복원.
+       실측 1440 장면2 H1 밴드 루마 95(6.4:1)로 이 값에서 이미 통과한다 */
+    --cs-scrim-top:35%;  --cs-scrim-full:75%;
+  }
+
+  /* 잠금은 폭만이 아니라 높이도 본다. 짧은 뷰포트·텍스트 확대에서 잘린 카피에 닿지 못하는 것을 막는다
+     (잠금 자체는 아래 (min-height:720px) 블록에서만 켠다 · FINDINGS a11y-23) */
+  .stage{height:auto;flex:1;min-height:520px}
+  .scene-list{display:none}
+  .site-header__logo{gap:10px;min-width:0}
+  .site-header__descriptor{
+    display:inline-block;max-width:300px;min-width:0;
+    padding-left:10px;border-left:1px solid var(--cs-hair);
+    font:500 var(--cs-text-xs)/1.4 var(--cs-font);color:var(--cs-ink-soft);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .site-nav__panel--center{left:50%;right:auto;transform:translateX(-50%)}
+
+  /* 페이저: 우하단 한 줄 (prev 44 + seg 40×6 + next 44 + pause 44 = 372) */
+  .pager{
+    inset:auto;right:var(--cs-pager-right);bottom:var(--cs-pager-bottom);
+    display:flex;align-items:center;pointer-events:auto;padding:0;
+  }
+  .pager__segs,.pager__pause,.pager__prev,.pager__next,.pager__hint{position:static;transform:none}
+  /* li 의 flex-basis 를 auto 로 되돌리지 않는다 — `.pager__seg{width:100%}` 가 기준을 잃는다.
+     ≥1200 의 .pager 는 폭 제약이 없어 축소가 걸리지 않는다(basis = 40 그대로) */
+  /* 힌트가 컨트롤 행 안(static)이라 트랙과 겹치지 않는다 — 기본 티어의 상한 축소를 되돌린다 */
+  .stage:has(.pager__hint:not([hidden])) .stage__track{max-height:calc(100% - 72px)}
+  .pager__prev::before,.pager__next::before{content:none}
+  .pager__hint{margin-left:8px;top:auto;left:auto}
+  /* hover 배경은 hover 격리 안에서만. 밖에 두면 터치 기기에서 배경이 고착된다 */
+  @media (hover:hover){
+    .pager__prev:hover,.pager__next:hover{background:var(--cs-x-media-hover)}
+  }
+
+  /* 홈 푸터: 가로 정렬 + 사이트맵은 위로 펼침.
+     🔴 1행 nowrap + overflow:hidden 고정을 걷었다. 실주소·전화·이메일이 들어오면 legal 폭이
+     1256을 넘어 법정 표시 항목이 잘렸다(FINDINGS craft-contract-3).
+     높이 44는 하한으로만 남기고, 넘치면 둘째 줄로 접힌다(카드가 flex:1 로 흡수). */
+  body.is-home .site-footer{
+    flex-direction:row;align-items:center;flex-wrap:wrap;gap:4px 24px;
+    min-height:var(--cs-footer-h);height:auto;padding:4px 18px;overflow:visible;
+  }
+  /* 홈 푸터 1행 압축. 링크는 WCAG 2.5.8 하한 24 를 지키고(인라인 예외에 기대지 않는다),
+     터치 기기에서는 아래 (pointer:coarse) 규칙이 44 로 되돌린다. */
+  body.is-home .site-footer a{min-height:24px;min-width:0}
+  body.is-home .site-footer__sitemap > summary,
+  body.is-home .site-footer__family-label,
+  body.is-home .site-footer__legal > span,
+  body.is-home .site-footer__legal address{min-height:0}
+  body.is-home .site-footer__sitemap{flex:none}
+  body.is-home .site-footer__sitemap > ul{
+    position:absolute;left:0;bottom:calc(100% + 8px);z-index:40;
+    display:grid;grid-template-columns:repeat(3,auto);gap:4px 24px;
+    padding:12px 16px;background:var(--cs-paper);border-radius:var(--cs-radius-bar);
+    box-shadow:var(--cs-shadow-panel);white-space:nowrap;
+    animation:dd-in var(--cs-t-dd-in) ease-out both;
+  }
+  body.is-home .site-footer__sitemap > ul a{min-height:32px}
+  /* 🔴 터치 기기(태블릿 가로 등)에서는 압축 예외를 걷고 44 를 되돌린다 — 운영규칙 §5-2-6 모바일 우선 */
+  @media (pointer:coarse){
+    body.is-home .site-footer a,
+    body.is-home .site-footer__sitemap > ul a{min-height:44px;min-width:44px}
+    body.is-home .site-footer{gap:0 24px}
+  }
+  body.is-home .site-footer__family{flex:none;flex-wrap:nowrap;white-space:nowrap}
+  body.is-home .site-footer__legal{flex:1 1 100%;min-width:0}
+  body.is-home .site-footer__legal address{min-width:0}
+
+  /* 서브 셸. 상단 = 계약값 「헤더 하단 +101」에서 body 세로 gap 10 을 뺀 값(CONTRACT §3-3) */
+  main.page-main{padding:calc(101px - var(--cs-gap-stack)) 80px 4rem}
+  .hero-doc__lead{font-size:var(--cs-text-lg)}
+
+  .essay{grid-template-columns:442px 442px;gap:60px;justify-content:center}
+  .essay__media{order:0;position:sticky;top:200px}
+  .essay__media img{width:442px;height:442px}
+  .essay__text p{font-size:var(--cs-text-lg)}
+
+  .featured{grid-template-columns:35fr 65fr;min-height:476px}
+  .featured__copy{padding:32px 40px}
+  .featured__media{order:0;min-height:0}
+
+  .rows__head{padding:32px 48px 12px}
+  .row{grid-template-columns:25fr 75fr}
+  .row__media{min-height:320px}
+  .row__copy{padding:32px 48px;border-left:1px solid var(--cs-hair)}
+  .row:has(.row__media:empty) .row__copy{border-left:0}   /* 미디어 칸이 접히면 세로 구분선도 없다 */
+
+  .people-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .field__group .field__options{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .join-form__row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}
+
+  .bridge-hero{padding-left:80px;padding-right:80px}
+  .bridge-body{padding-left:80px;padding-right:80px}
+}
+
+/* D ≥1200 + 높이 720 이상에서만 홈 스크롤 잠금.
+   1280×620 노트북·텍스트 200% 확대에서는 잠그지 않고 페이지를 스크롤하게 둔다 (FINDINGS a11y-23) */
+@media (min-width:1200px) and (min-height:720px){
+  body.is-home{height:100vh;overflow:var(--cs-stage-lock)}
+  body.is-home .stage{min-height:0}
+}
+
+/* 짧은 노트북(1280×620)에서는 카드 하한 520 때문에 푸터가 화면 밖으로 밀리고 페이지 스크롤바가 생긴다.
+   레퍼런스 문법(내비 + 카드 + 푸터가 한 화면)을 이 대역에서도 지키도록 카드 하한만 낮춘다
+   (잠금은 위 블록에서 이미 걸지 않는다 · FINDINGS fidelity-11) */
+@media (min-width:1200px) and (max-height:719.98px){
+  .stage{min-height:420px}
+}
+
+/* XL ≥1440: 카드·헤더·푸터 1280 상한 중앙. 서브 inner 1200 유지 */
+@media (min-width:1440px){
+  .site-header,
+  main.stage-wrap,
+  .site-footer{width:100%;max-width:1280px;margin-left:auto;margin-right:auto}
+}
+
+
+/* 16. reduced-motion (CONTRACT §4-3 · 페이드·스윕·스태거 제거, 즉시 전환) ------- */
+
+@media (prefers-reduced-motion: reduce){
+  html{scroll-behavior:auto}
+  .scene,
+  .scene.is-active,
+  .stage__video,
+  .stage__vid,
+  .site-nav__panel,
+  .site-nav__panel *,
+  .mobile-menu,
+  .panel-grid > li,
+  .panel-list > li,
+  .panel-intro,
+  .btn,
+  .btn::after,
+  .site-nav__chevron,
+  .tabs__tab,
+  .media-card,
+  button.panel-card,
+  .pager__prev,.pager__next,.pager__pause,
+  .accordion__item > summary::after,
+  .site-footer__sitemap > summary::after,
+  body.is-home .site-footer__sitemap > ul,
+  .page-main__inner,
+  .bridge-hero,
+  .bridge-body,
+  main.not-found{transition:none;animation:none}
+  .scene{transform:none}
+  /* `.pager__seg.is-sweeping::before`(0,2,1) 를 이기려면 같은 특이성이 필요하다 — 단일 클래스로 쓰면
+     RM 인데도 스윕이 그대로 재생된다(FINDINGS a11y-1 (b)) */
+  .pager__seg::before,
+  .pager__seg.is-sweeping::before{animation:none}
+  .btn:hover{transform:none}
+  .media-card:hover{transform:none}
+}

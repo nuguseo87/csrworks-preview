@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="1920" height="1080" preserveAspectRatio="xMidYMid slice">
+<!-- scene 1 · 웰다잉 · 창가 책상 위 아이보리 종이와 린넨 커튼 그림자. 추상 기하만. 종이는 우상단, 하단 38% 어둡게 -->
+<defs>
+<radialGradient id="s1-glow" cx=".78" cy=".22" r=".5"><stop offset="0" stop-color="#ece4cf" stop-opacity=".5"/><stop offset=".5" stop-color="#ad9d7b" stop-opacity=".18"/><stop offset="1" stop-color="#111812" stop-opacity="0"/></radialGradient>
+<linearGradient id="s1-paper" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f3ecd9"/><stop offset="1" stop-color="#d9cfb4"/></linearGradient>
+<linearGradient id="s1-curtain" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1e231f" stop-opacity="0"/><stop offset=".5" stop-color="#1e231f" stop-opacity=".22"/><stop offset="1" stop-color="#1e231f" stop-opacity="0"/></linearGradient>
+<linearGradient id="s1-desk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5a4630" stop-opacity=".5"/><stop offset="1" stop-color="#2a2118" stop-opacity="0"/></linearGradient>
+<linearGradient id="s1-shade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#060b07" stop-opacity="0"/><stop offset=".55" stop-color="#060b07" stop-opacity=".78"/><stop offset="1" stop-color="#040704"/></linearGradient>
+<linearGradient id="s1-left" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#040704" stop-opacity=".75"/><stop offset="1" stop-color="#040704" stop-opacity="0"/></linearGradient>
+<filter id="s1-soft" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="22"/></filter>
+<filter id="s1-steam" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="34"/></filter>
+</defs>
+<rect width="1920" height="1080" fill="#141a15"/>
+<rect width="1920" height="1080" fill="url(#s1-glow)"/>
+<polygon points="900,430 1920,360 1920,760 780,760" fill="url(#s1-desk)"/>
+<ellipse cx="1380" cy="560" rx="360" ry="70" fill="#040704" fill-opacity=".45" filter="url(#s1-soft)"/>
+<g transform="rotate(-6 1390 400)">
+<rect x="1140" y="220" width="500" height="360" rx="6" fill="url(#s1-paper)"/>
+<rect x="1140" y="220" width="500" height="360" rx="6" fill="url(#s1-curtain)"/>
+<g fill="#1e231f" fill-opacity=".08"><rect x="1140" y="300" width="500" height="14"/><rect x="1140" y="380" width="500" height="14"/><rect x="1140" y="460" width="500" height="14"/></g>
+</g>
+<rect x="1668" y="300" width="14" height="330" rx="7" transform="rotate(22 1675 465)" fill="#2b2620"/>
+<rect x="1668" y="300" width="14" height="60" rx="7" transform="rotate(22 1675 465)" fill="#c9a86a"/>
+<ellipse cx="1760" cy="540" rx="86" ry="40" fill="#3a3129"/>
+<ellipse cx="1760" cy="536" rx="70" ry="28" fill="#d7c39a" fill-opacity=".85"/>
+<ellipse cx="1750" cy="420" rx="50" ry="110" fill="#ece4cf" fill-opacity=".14" filter="url(#s1-steam)"/>
+<rect x="0" y="0" width="880" height="1080" fill="url(#s1-left)"/>
+<rect y="640" width="1920" height="440" fill="url(#s1-shade)"/>
+</svg>

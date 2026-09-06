@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="1920" height="1080" preserveAspectRatio="xMidYMid slice">
+<!-- scene 3 · 기부금 모금 대행 · 저녁 사무실, 놋쇠 스탠드의 따뜻한 빛 웅덩이와 봉투. 추상 기하만(글자·손 없음). 등불은 우상단 -->
+<defs>
+<radialGradient id="s3-pool" cx=".72" cy=".36" r=".38"><stop offset="0" stop-color="#ea9941" stop-opacity=".9"/><stop offset=".4" stop-color="#d18e35" stop-opacity=".4"/><stop offset="1" stop-color="#111812" stop-opacity="0"/></radialGradient>
+<radialGradient id="s3-core" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#ffe2b0"/><stop offset=".6" stop-color="#ea9941" stop-opacity=".7"/><stop offset="1" stop-color="#ea9941" stop-opacity="0"/></radialGradient>
+<linearGradient id="s3-desk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8c541f" stop-opacity=".55"/><stop offset="1" stop-color="#3a2410" stop-opacity="0"/></linearGradient>
+<linearGradient id="s3-env" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e8d7b8" stop-opacity=".78"/><stop offset="1" stop-color="#b59a6e" stop-opacity=".55"/></linearGradient>
+<linearGradient id="s3-shade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#060b07" stop-opacity="0"/><stop offset=".55" stop-color="#060b07" stop-opacity=".8"/><stop offset="1" stop-color="#040704"/></linearGradient>
+<linearGradient id="s3-left" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#040704" stop-opacity=".8"/><stop offset="1" stop-color="#040704" stop-opacity="0"/></linearGradient>
+<filter id="s3-soft" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="20"/></filter>
+<filter id="s3-haze" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="50"/></filter>
+</defs>
+<rect width="1920" height="1080" fill="#100f0d"/>
+<rect width="1920" height="1080" fill="url(#s3-pool)"/>
+<polygon points="860,470 1920,400 1920,780 720,780" fill="url(#s3-desk)"/>
+<ellipse cx="1390" cy="560" rx="380" ry="120" fill="#ea9941" fill-opacity=".22" filter="url(#s3-haze)"/>
+<g transform="rotate(-8 1330 560)">
+<rect x="1180" y="500" width="300" height="190" rx="6" fill="url(#s3-env)"/>
+<polygon points="1180,500 1330,600 1480,500" fill="#c8b48c" fill-opacity=".55"/>
+</g>
+<g transform="rotate(5 1560 520)">
+<rect x="1440" y="470" width="260" height="160" rx="6" fill="url(#s3-env)" fill-opacity=".8"/>
+</g>
+<rect x="1080" y="430" width="360" height="70" rx="8" fill="#2a1d14" fill-opacity=".9"/>
+<rect x="1080" y="422" width="360" height="12" rx="6" fill="#4a3320"/>
+<circle cx="1620" cy="600" r="30" fill="#9c2f2a" fill-opacity=".75"/>
+<circle cx="1620" cy="600" r="14" fill="#c74a3f" fill-opacity=".8"/>
+<rect x="1690" y="120" width="10" height="330" fill="#3a2b1a"/>
+<ellipse cx="1695" cy="130" rx="110" ry="42" fill="#5a3f22"/>
+<ellipse cx="1695" cy="150" rx="150" ry="70" fill="url(#s3-core)" filter="url(#s3-soft)"/>
+<rect x="0" y="0" width="880" height="1080" fill="url(#s3-left)"/>
+<rect y="640" width="1920" height="440" fill="url(#s3-shade)"/>
+</svg>
