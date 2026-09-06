@@ -60,7 +60,10 @@
   --cs-header-h:61px;
   --cs-header-pad:8px 20px;   /* 세로 10 → 8: 헤더 61(내용상자 60) 안에 터치 타깃 44 가 정확히 들어간다(60−16=44). 헤더 높이·가로 20 불변 */
   --cs-nav-gap:12px;
-  --cs-card-h:calc(100vh - 247px);
+  /* 🔴 09-06 홍회장 지시: 모바일은 영상에만 집중. 카드가 헤더 아래 화면 전부를 채우고
+     장면 목차는 감춘다. 푸터는 화면 밖으로 밀려 스크롤해야 나온다.
+     헤더 61 + 상하 gap(10×2) = 81 만 뺀다(종전 247 = 목차·푸터까지 뺀 값). */
+  --cs-card-h:calc(100vh - 81px);
   --cs-track-left:16px;  --cs-track-right:24px;
   --cs-track-bottom:72px;
   --cs-track-max:92%;
@@ -88,7 +91,7 @@
    스크롤 도중 카드가 늘어난다(레이아웃 시프트). 미지원 브라우저는 위 vh 값을 그대로 쓴다.
    body{min-height:100dvh} 는 그대로 (FINDINGS perf-mobile-7) */
 @supports (height:100svh){
-  :root{ --cs-card-h:calc(100svh - 247px) }
+  :root{ --cs-card-h:calc(100svh - 81px) }
 }
 
 /* 1-3. styles 내부 전용 (다른 파일이 참조하지 않는다) */
@@ -351,12 +354,15 @@ button.panel-card:active{transform:scale(.985)}
 
 main.stage-wrap{display:flex;flex-direction:column;gap:var(--cs-gap-stack);flex:1;min-height:0;position:relative}
 
+
 .stage{
   position:relative;height:var(--cs-card-h);min-height:520px;
   border-radius:var(--cs-radius-card);overflow:hidden;
   background:var(--cs-stage-dark);box-shadow:var(--cs-shadow-card);
   /* pan-y 단독은 핀치줌까지 막는다(WCAG 1.4.4). 가로 스와이프 인식에는 pan-x 차단만 필요 */
-  touch-action:pan-y pinch-zoom;color:var(--cs-on-media);
+  /* 세로·가로 제스처를 모두 장면 전환으로 받는다(09-06). 확대는 계속 허용해 WCAG 1.4.4 를 지킨다.
+     트랙이 넘칠 때의 스크롤은 .stage__track 이 따로 pan-y 로 되돌린다. */
+  touch-action:pinch-zoom;color:var(--cs-on-media);
 }
 
 .stage__bg{position:absolute;inset:0;z-index:0}
@@ -387,6 +393,7 @@ main.stage-wrap{display:flex;flex-direction:column;gap:var(--cs-gap-stack);flex:
 .stage:has(.scene.is-active[data-scene-id="welldying"]) .stage__overlay{ --cs-scrim-a:.58 }
 
 .stage__track{
+  touch-action:pan-y pinch-zoom;
   position:absolute;left:var(--cs-track-left);right:var(--cs-track-right);bottom:var(--cs-track-bottom);
   z-index:2;max-width:var(--cs-track-max);
   /* 확대(텍스트 200%)·짧은 뷰포트에서 카드 밖으로 넘친 카피에 닿을 경로 (FINDINGS a11y-23) */
@@ -534,7 +541,7 @@ main.stage-wrap{display:flex;flex-direction:column;gap:var(--cs-gap-stack);flex:
 /* 모바일 영상 옵트인(BUILD_PLAN §8 「사용자가 재생 버튼을 누르면 로드」).
    컨트롤 행에 넣으면 총폭이 44 늘어 카드폭을 넘기므로 카드 좌상단에 둔다(트랙은 하단 정렬이라 겹침 0).
    노출 조건 = 영상이 자동 재생되지 않는 기기뿐: hover 가 있거나(마우스) ≥768 이면 숨긴다 */
-.pager__video{
+.pager__video{display:none !important;
   position:absolute;top:8px;left:8px;
   display:inline-flex;align-items:center;justify-content:center;
   width:var(--cs-hit);height:var(--cs-hit);border-radius:50%;padding:0;
@@ -1223,3 +1230,22 @@ main.not-found{flex:1;padding:3rem 24px;text-align:center;animation:page-in .4s 
 .net-note{margin-top:2rem;font-size:var(--cs-text-sm);color:var(--cs-ink-soft)}
 .hero-doc__note{margin-top:1rem;color:var(--cs-ink-soft)}
 @media (min-width:768px){ .net-list{grid-template-columns:1fr 1fr;column-gap:2rem} }
+
+
+/* ══════════════════════════════════════════════════════════════
+   🔴 모바일 = 영상 전용 화면 (2026-09-06 홍회장 지시: "16:9 꽉차게 영상만, 밑에 아예 없게")
+   장면 목차를 감추고 카드를 좌우 끝까지 붙여 헤더 아래 화면 전부를 영상이 차지한다.
+   푸터는 화면 밖으로 밀려 스크롤해야 나온다. ≥768 은 종전 카드 형태 유지.
+   이 블록은 .scene-list 정의보다 뒤에 와야 이긴다(같은 특이도 → 소스 순서).
+   ══════════════════════════════════════════════════════════════ */
+@media (max-width:767.98px){
+  .scene-list{display:none !important}
+  .stage{
+    border-radius:0;
+    margin-left:calc(var(--cs-page-x) * -1);
+    margin-right:calc(var(--cs-page-x) * -1);
+  }
+  main.stage-wrap{gap:0}
+  body{padding-bottom:0}
+  .site-footer{margin-top:var(--cs-gap-stack)}
+}

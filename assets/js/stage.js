@@ -62,7 +62,10 @@
     var saveData = !!(navigator.connection && navigator.connection.saveData);
     /* 상한을 767.98 로 둔다: 옵트인 버튼(.pager__video)을 숨기는 CSS 가 min-width:768 이라
        768 을 양쪽에 걸치면 '영상도 없고 켤 버튼도 없는' 폭이 1px 생긴다 */
-    var mobileNoVideo = function () { return window.matchMedia('(hover:none) and (max-width:767.98px)').matches; };
+    /* 09-06 실기기 확인 후 변경: 모바일에서도 영상을 바로 튼다.
+       클립이 1.2~3.7MB 로 작고, 「재생 버튼을 눌러야 나오는 무대」는 첫인상에서 영상이 없는 것과 같다.
+       데이터 절약 모드(saveData)·모션 민감(reduced-motion)에서는 종전대로 포스터만 보여준다. */
+    var mobileNoVideo = function () { return false; };
     /* 모바일(hover:none·≤768) 무영상 경로는 사용자가 명시적으로 켤 때만 해제된다(BUILD_PLAN §8 '재생 버튼을 누르면 로드').
        트리거 DOM(.pager__video)이 있으면 자동으로 연결하고, 없으면 공개 API(CSStage.enableVideo())로도 켤 수 있다. */
     var videoOptIn = false;
@@ -506,17 +509,30 @@
     }
     cleanups.push(on(stageEl, 'wheel', onWheel, { passive: false }));
 
-    /* 스와이프: 가로 40px · 30° 이내. 세로는 touch-action:pan-y 로 페이지 스크롤 */
+    /* 스와이프: 가로·세로 모두 장면 전환 (09-06 실기기 확인 — 세로만 페이지 스크롤이면
+       「위로 쓸어올렸는데 화면만 내려간다」가 되어 무대가 무대로 읽히지 않는다).
+       위로 = 다음 · 아래로 = 이전 · 왼쪽 = 다음 · 오른쪽 = 이전.
+       카드는 touch-action:none 이라 제스처가 페이지 스크롤에 먹히지 않는다.
+       단 트랙이 실제로 넘칠 때(확대·짧은 폰)는 트랙 안 세로 제스처를 스크롤에 양보한다. */
     var touch = null;
-    cleanups.push(on(stageEl, 'touchstart', function (e) { var t = e.changedTouches[0]; touch = { x: t.clientX, y: t.clientY }; }, { passive: true }));
+    var trackScrollable = function (target) {
+      var tr = target && target.closest ? target.closest('.stage__track') : null;
+      return !!(tr && tr.scrollHeight > tr.clientHeight + 1);
+    };
+    cleanups.push(on(stageEl, 'touchstart', function (e) {
+      var t = e.changedTouches[0];
+      touch = { x: t.clientX, y: t.clientY, skip: trackScrollable(e.target) };
+    }, { passive: true }));
     cleanups.push(on(stageEl, 'touchend', function (e) {
       if (!touch) return;
       var t = e.changedTouches[0];
-      var dx = t.clientX - touch.x, dy = t.clientY - touch.y; touch = null;
-      if (Math.abs(dx) < cfg.swipe.thresholdPx) return;
-      if (Math.atan2(Math.abs(dy), Math.abs(dx)) > cfg.swipe.maxAngleDeg * Math.PI / 180) return;
+      var dx = t.clientX - touch.x, dy = t.clientY - touch.y, skip = touch.skip; touch = null;
+      if (skip) return;
+      var ax = Math.abs(dx), ay = Math.abs(dy);
+      if (Math.max(ax, ay) < cfg.swipe.thresholdPx) return;
       hideHint();
-      if (dx < 0) next('user'); else prev('user');
+      if (ax >= ay) { if (dx < 0) next('user'); else prev('user'); }
+      else { if (dy < 0) next('user'); else prev('user'); }
       revealListItem();
     }, { passive: true }));
     cleanups.push(on(stageEl, 'touchcancel', function () { touch = null; }, { passive: true }));

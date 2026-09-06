@@ -1,8 +1,8 @@
 {
-  "time": "2026-09-06T07:10:05.163Z",
-  "hash": "d266d3dc",
-  "cssHash": "4780447b",
-  "jsHash": "b95c5496",
+  "time": "2026-09-06T07:39:18.938Z",
+  "hash": "f3a586e5",
+  "cssHash": "cd88f84e",
+  "jsHash": "d8c07892",
   "siteUrl": "https://nuguseo87.github.io/csrworks-preview",
   "relative": true,
   "strict": true,
@@ -162,8 +162,8 @@
   "assets": {
     "video": "6/6",
     "posterJpg": 6,
-    "latestAssetMtime": "2026-09-05T19:47:02.634Z",
-    "latestAssetFile": "posters/scene0_senior.jpg"
+    "latestAssetMtime": "2026-09-06T07:38:41.296Z",
+    "latestAssetFile": "posters/scene5_family.jpg"
   },
   "warnings": [
     "privacy.processors \"Cloudflare, Inc.\": SCENES.json 에 purposePublic/retentionPublic 없음 → 빌드 내장 공개 문구 사용(통합자 이관 대상)",
